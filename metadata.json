@@ -1,0 +1,6 @@
+{
+  "name": "리서치랩",
+  "description": "고객 인터뷰 검증, AI 질문·분석 리서치 가이드, 설문 배포 및 데이터 수집 워크스페이스",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

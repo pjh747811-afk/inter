@@ -1,0 +1,1 @@
+{ "data": { "tables": ["research_surveys", "research_responses"] }, "secrets": ["BAZE_API_KEY"] }
