@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Copy,
+  Download,
   FileSearch,
   FolderPlus,
   RotateCcw,
@@ -13,6 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import { api, demoStore } from '../lib/api';
+import { exportInterviewAnalysisCsv, exportQuestionGuideCsv } from '../lib/researchCsv';
 import {
   interviewAnalysisKey,
   questionGuideKey,
@@ -620,6 +622,16 @@ export function QuestionGenerator({
                 </button>
                 <button
                   type="button"
+                  onClick={() => {
+                    const file = exportQuestionGuideCsv(result);
+                    setNotice(`리서치 가이드 분석 및 질문을 CSV(${file})로 다운로드했어요.`);
+                  }}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                >
+                  <Download size={14} aria-hidden="true" /> CSV 다운로드
+                </button>
+                <button
+                  type="button"
                   onClick={() => saveGuideAsRoutine(result)}
                   className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee8ff]"
                 >
@@ -863,6 +875,16 @@ export function QuestionGenerator({
                 >
                   <Copy size={14} aria-hidden="true" /> 정리 리포트 복사
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const file = exportInterviewAnalysisCsv(analysisResult);
+                    setNotice(`인터뷰 질문·메모 분석 결과를 CSV(${file})로 다운로드했어요.`);
+                  }}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                >
+                  <Download size={14} aria-hidden="true" /> 분석 결과 CSV
+                </button>
                 {analysisResult.questionReviews.length > 0 && (
                   <button
                     type="button"
@@ -936,9 +958,9 @@ export function QuestionGenerator({
                 const options = it.options ?? matched?.options ?? [];
                 return {
                   label: it.label,
-                  type: options.length > 0 ? 'choice' : 'text',
+                  type: options.length >= 2 ? 'choice' : 'text',
                   required: true,
-                  options,
+                  options: options.length >= 2 ? options : [],
                 };
               }),
             };

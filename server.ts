@@ -8,6 +8,7 @@ import {
   analyzeInterviewSentimentTrend,
   analyzeSurveyData,
   generateQuestionGuide,
+  generateResearchTemplate,
   generateSurveyFromItem,
   summarizeResearchText,
   transcribeInterviewAudio,
@@ -61,6 +62,20 @@ function broadcastSync(workspaceId: string, event: string, payload: unknown) {
   }
 }
 
+const researchEventClients = new Set<express.Response>();
+
+function broadcastResearchEvent(event: string, payload: unknown) {
+  if (researchEventClients.size === 0) return;
+  const serialized = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const client of researchEventClients) {
+    try {
+      client.write(serialized);
+    } catch {
+      researchEventClients.delete(client);
+    }
+  }
+}
+
 const app = express();
 app.use(express.json({ limit: '25mb' }));
 
@@ -69,6 +84,9 @@ function extractBearer(header: string | undefined): string {
   const match = /^Bearer\s+(.+)$/i.exec(header.trim());
   return match ? match[1].trim() : '';
 }
+
+const DEFAULT_SURVEY_INTRO =
+  '안녕하세요. 본 설문은 서비스 개선 및 고객 경험 검증을 위한 짧은 설문(약 2~3분 소요)입니다. 모든 응답은 연구 목적 외에는 사용되지 않으며, 원하실 경우 언제든 참여를 중단하실 수 있습니다.';
 
 function validateSurveyQuestions(raw: unknown): { ok: true; questions: SurveyQuestion[] } | { ok: false; error: string } {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 20) {
@@ -82,10 +100,11 @@ function validateSurveyQuestions(raw: unknown): { ok: true; questions: SurveyQue
       return { ok: false, error: `${i + 1}번 질문 내용을 입력해 주세요.` };
     }
     const type = q?.type === 'choice' || q?.type === 'scale' || q?.type === 'text' ? q.type : 'text';
-    const options =
+    const rawOptions =
       type === 'choice' && Array.isArray(q?.options)
-        ? q.options.map((o) => String(o).trim()).filter(Boolean).slice(0, 10)
+        ? q.options.map((o) => String(o).trim()).filter(Boolean)
         : [];
+    const options = Array.from(new Set(rawOptions)).slice(0, 10);
     if (type === 'choice' && options.length < 2) {
       return { ok: false, error: `${i + 1}번 객관식 문항은 선택지를 2개 이상 입력해 주세요.` };
     }
@@ -98,6 +117,29 @@ function validateSurveyQuestions(raw: unknown): { ok: true; questions: SurveyQue
   }
   return { ok: true, questions };
 }
+
+// Create & publish survey
+app.post('/api/research/surveys', async (req, res) => {
+  try {
+    const title = String(req.body?.title ?? '').trim().slice(0, 100);
+    const rawIntro = String(req.body?.intro ?? '').trim().slice(0, 3000);
+    const intro = rawIntro || DEFAULT_SURVEY_INTRO;
+    if (!title) {
+      res.status(400).json({ error: '설문 제목을 입력해 주세요.' });
+      return;
+    }
+    const validated = validateSurveyQuestions(req.body?.questions);
+    if (!validated.ok) {
+      res.status(400).json({ error: validated.error });
+      return;
+    }
+    const created = await createSurvey({ title, intro, questions: validated.questions });
+    res.status(201).json(created);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '설문을 저장하지 못했어요.';
+    res.status(500).json({ error: message });
+  }
+});
 
 // AI Research Guide: generate interview & survey questions + validation analysis
 app.post('/api/research/question-guide', async (req, res) => {
@@ -164,6 +206,36 @@ app.post('/api/research/generate-survey', async (req, res) => {
   } catch (error) {
     const status = error instanceof AiApiError ? error.status : 500;
     const message = error instanceof Error ? error.message : '설문 문항 생성 중 오류가 발생했어요.';
+    res.status(status).json({ error: message });
+  }
+});
+
+// AI Research Template Generator: recommend interview guide + survey questions from research purpose
+app.post('/api/research/generate-template', async (req, res) => {
+  try {
+    const purpose = String(req.body?.purpose ?? '').trim().slice(0, 500);
+    const audience = String(req.body?.audience ?? '').trim().slice(0, 200);
+    const context = String(req.body?.context ?? '').trim().slice(0, 500);
+    const rawFocus = req.body?.focus;
+    const focus = rawFocus === 'interview' || rawFocus === 'survey' ? rawFocus : 'both';
+    const count = Math.max(4, Math.min(10, Math.round(Number(req.body?.count) || 6)));
+
+    if (purpose.length < 3) {
+      res.status(400).json({ error: '리서치 목적을 3자 이상 입력해 주세요.' });
+      return;
+    }
+
+    const template = await generateResearchTemplate({
+      purpose,
+      audience: audience || undefined,
+      context: context || undefined,
+      focus,
+      count,
+    });
+    res.json(template);
+  } catch (error) {
+    const status = error instanceof AiApiError ? error.status : 500;
+    const message = error instanceof Error ? error.message : '질문 템플릿 생성 중 오류가 발생했어요.';
     res.status(status).json({ error: message });
   }
 });
@@ -245,32 +317,6 @@ app.post('/api/research/summarize-text', async (req, res) => {
   }
 });
 
-// Create & publish survey
-app.post('/api/research/surveys', async (req, res) => {
-  try {
-    const title = String(req.body?.title ?? '').trim().slice(0, 100);
-    const intro = String(req.body?.intro ?? '').trim().slice(0, 3000);
-    if (!title) {
-      res.status(400).json({ error: '설문 제목을 입력해 주세요.' });
-      return;
-    }
-    if (!intro) {
-      res.status(400).json({ error: '연구 안내 / 동의 내용을 입력해 주세요.' });
-      return;
-    }
-    const validated = validateSurveyQuestions(req.body?.questions);
-    if (!validated.ok) {
-      res.status(400).json({ error: validated.error });
-      return;
-    }
-    const created = await createSurvey({ title, intro, questions: validated.questions });
-    res.status(201).json(created);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : '설문을 저장하지 못했어요.';
-    res.status(500).json({ error: message });
-  }
-});
-
 // Get public survey for target user response
 app.get('/api/research/surveys/:id', async (req, res) => {
   const survey = await getPublicSurvey(req.params.id);
@@ -279,6 +325,30 @@ app.get('/api/research/surveys/:id', async (req, res) => {
     return;
   }
   res.json(survey);
+});
+
+// Real-time SSE stream for survey response collection
+app.get('/api/research/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  researchEventClients.add(res);
+  res.write(`event: ready\ndata: ${JSON.stringify({ ok: true })}\n\n`);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      clearInterval(heartbeat);
+    }
+  }, 20000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    researchEventClients.delete(res);
+  });
 });
 
 // Submit target user response
@@ -290,6 +360,11 @@ app.post('/api/research/surveys/:id/responses', async (req, res) => {
     res.status(result.status).json({ error: result.error });
     return;
   }
+  broadcastResearchEvent('survey-response', {
+    surveyId: req.params.id,
+    responseId: result.data.id,
+    createdAt: result.data.createdAt,
+  });
   res.status(201).json(result.data);
 });
 
@@ -329,6 +404,7 @@ app.patch('/api/research/manage/:id', async (req, res) => {
     res.status(403).json({ error: '설문 관리 키가 일치하지 않아요.' });
     return;
   }
+  broadcastResearchEvent('survey-updated', { surveyId: req.params.id, active });
   res.json(result.data);
 });
 
@@ -373,7 +449,8 @@ app.get('/api/research/manage/:id/answers.csv', async (req, res) => {
     res.status(401).json({ error: '설문 관리 권한이 필요해요.' });
     return;
   }
-  const page = Math.max(1, Number(req.query.page ?? 1) || 1);
+  const exportAll = req.query.all === '1' || req.query.page === 'all';
+  const page = exportAll ? 'all' : Math.max(1, Number(req.query.page ?? 1) || 1);
   const result = await exportSurveyCsv(req.params.id, key, page);
   if (result.status === 404) {
     res.status(404).json({ error: '설문을 찾을 수 없어요.' });
@@ -384,7 +461,10 @@ app.get('/api/research/manage/:id/answers.csv', async (req, res) => {
     return;
   }
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="survey-${req.params.id}-page-${page}.csv"`);
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="survey-${req.params.id}-${exportAll ? 'all' : `page-${page}`}.csv"`,
+  );
   res.send(result.csv);
 });
 

@@ -227,7 +227,14 @@ function escapeCsvCell(value: unknown): string {
   return `"${safe.replaceAll('"', '""')}"`;
 }
 
-export async function exportSurveyCsv(id: string, ownerKey: string, page = 1) {
+function formatExportTimestamp(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+export async function exportSurveyCsv(id: string, ownerKey: string, page: number | 'all' = 1) {
   const db = await readDb();
   const survey = db.surveys.find((s) => s.id === id);
   if (!survey) return { status: 404 as const };
@@ -238,13 +245,20 @@ export async function exportSurveyCsv(id: string, ownerKey: string, page = 1) {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
   const pageSize = 500;
-  const start = Math.max(0, (page - 1) * pageSize);
-  const slice = all.slice(start, start + pageSize);
+  const start = page === 'all' ? 0 : Math.max(0, (page - 1) * pageSize);
+  const slice = page === 'all' ? all : all.slice(start, start + pageSize);
 
-  const headers = ['응답 ID', '제출 시각', '참여 동의', ...survey.questions.map((q, i) => `${i + 1}. ${q.label}`)];
-  const rows = slice.map((r) => [
+  const headers = [
+    '응답 번호',
+    '응답 ID',
+    '제출 시각',
+    '참여 동의',
+    ...survey.questions.map((q, i) => `Q${i + 1}. ${q.label}`),
+  ];
+  const rows = slice.map((r, idx) => [
+    `#${start + idx + 1}`,
     r.id,
-    r.createdAt,
+    formatExportTimestamp(r.createdAt),
     r.consent ? '동의' : '미동의',
     ...survey.questions.map((_, i) => r.answers[i] ?? ''),
   ]);

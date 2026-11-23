@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import {
   Activity,
   BarChart3,
+  Download,
   MessageSquareQuote,
   RotateCcw,
   Sparkles,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { api, demoStore } from '../lib/api';
 import { listAllVoiceAnswers, type VoiceAnswer } from '../lib/interviewAudio';
+import { exportSentimentTrendCsv } from '../lib/researchCsv';
 import type { Person } from '../lib/research';
 
 export interface SentimentPoint {
@@ -547,6 +549,16 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
             <Sparkles size={14} aria-hidden="true" />
             {busy ? '감정 추이 분석 중…' : result ? '감정 추이 다시 분석' : '감정 추이 분석하기'}
           </button>
+
+          {result && (
+            <button
+              type="button"
+              onClick={() => exportSentimentTrendCsv(result)}
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+            >
+              <Download size={14} aria-hidden="true" /> 감정 추이 CSV
+            </button>
+          )}
         </div>
       </div>
 

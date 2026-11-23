@@ -1,6 +1,9 @@
+import { useCallback, useEffect, useState } from 'react';
+import { demoStore } from './api';
 import type { Question } from './research';
 
 export type TemplateCategory = '전체' | '초기 검증' | '컨셉·제품' | '수익화·이탈' | '스크리닝';
+export type TemplateFocus = 'both' | 'interview' | 'survey';
 
 export interface InterviewTemplateItem {
   stage: string;
@@ -19,6 +22,11 @@ export interface ResearchTemplate {
   surveyIntro: string;
   interview: InterviewTemplateItem[];
   survey: Question[];
+  isAiGenerated?: boolean;
+  focus?: TemplateFocus;
+  purposeInput?: string;
+  audienceInput?: string;
+  createdAt?: string;
 }
 
 export const templateCategories: TemplateCategory[] = [
@@ -457,6 +465,64 @@ export const researchTemplates: ResearchTemplate[] = [
   },
 ];
 
-export function getResearchTemplateById(id: string): ResearchTemplate | undefined {
-  return researchTemplates.find((t) => t.id === id);
+export const customTemplatesKey = 'research.custom-templates.v1';
+const CUSTOM_TEMPLATES_EVENT = 'research-custom-templates-updated';
+
+export function readCustomTemplates(): ResearchTemplate[] {
+  const raw = demoStore.get<ResearchTemplate[]>(customTemplatesKey, []);
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item) => item && typeof item.id === 'string' && typeof item.title === 'string');
 }
+
+export function writeCustomTemplates(next: ResearchTemplate[]): void {
+  demoStore.set(customTemplatesKey, next);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(CUSTOM_TEMPLATES_EVENT));
+  }
+}
+
+export function saveCustomTemplate(template: ResearchTemplate): ResearchTemplate[] {
+  const current = readCustomTemplates().filter((t) => t.id !== template.id);
+  const next = [{ ...template, isAiGenerated: true }, ...current].slice(0, 40);
+  writeCustomTemplates(next);
+  return next;
+}
+
+export function deleteCustomTemplate(id: string): ResearchTemplate[] {
+  const next = readCustomTemplates().filter((t) => t.id !== id);
+  writeCustomTemplates(next);
+  return next;
+}
+
+export function useCustomTemplates() {
+  const [customTemplates, setCustomTemplates] = useState<ResearchTemplate[]>(() => readCustomTemplates());
+
+  useEffect(() => {
+    const sync = () => setCustomTemplates(readCustomTemplates());
+    window.addEventListener(CUSTOM_TEMPLATES_EVENT, sync);
+    window.addEventListener('research-sync-applied', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(CUSTOM_TEMPLATES_EVENT, sync);
+      window.removeEventListener('research-sync-applied', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  const addTemplate = useCallback((template: ResearchTemplate) => {
+    const next = saveCustomTemplate(template);
+    setCustomTemplates(next);
+  }, []);
+
+  const removeTemplate = useCallback((id: string) => {
+    const next = deleteCustomTemplate(id);
+    setCustomTemplates(next);
+  }, []);
+
+  return { customTemplates, addTemplate, removeTemplate };
+}
+
+export function getResearchTemplateById(id: string): ResearchTemplate | undefined {
+  return readCustomTemplates().find((t) => t.id === id) ?? researchTemplates.find((t) => t.id === id);
+}
+

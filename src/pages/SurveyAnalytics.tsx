@@ -17,8 +17,9 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, demoStore } from '../lib/api';
 import { exportSurveyPdfReport } from '../lib/pdfReport';
+import { exportSurveyAnalyticsCsv, exportSurveyRawResponsesCsv } from '../lib/researchCsv';
 import {
   types,
   type SurveyAnalysis,
@@ -104,10 +105,13 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
     state.keys.find((k) => k.id === requestedId) ?? state.keys[0];
   const summary: SurveySummary | undefined = selectedKey ? state.summaries[selectedKey.id] : undefined;
 
+  const surveyAiStoreKey = 'research.survey-ai-analysis.v1';
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState(0);
   const [keywordChartMode, setKeywordChartMode] = useState<'bubble' | 'bar'>('bubble');
   const [selectedKeyword, setSelectedKeyword] = useState('');
-  const [analysisMap, setAnalysisMap] = useState<Record<string, SurveyAnalysis>>({});
+  const [analysisMap, setAnalysisMap] = useState<Record<string, SurveyAnalysis>>(() =>
+    demoStore.get<Record<string, SurveyAnalysis>>(surveyAiStoreKey, {}),
+  );
   const [analyzing, setAnalyzing] = useState(false);
   const [aiError, setAiError] = useState('');
   const [notice, setNotice] = useState('');
@@ -120,11 +124,15 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
   const keywordSvgRef = useRef<SVGSVGElement | null>(null);
   const timelineSvgRef = useRef<SVGSVGElement | null>(null);
 
-  // Reset question/keyword filter when switching surveys
+  // Refresh latest collected responses when entering analytics or switching surveys
   useEffect(() => {
     setSelectedQuestionIdx(0);
     setSelectedKeyword('');
     setAiError('');
+    if (selectedKey?.id) {
+      state.reload(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedKey?.id]);
 
   const distributions = useMemo(
@@ -198,14 +206,19 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
     setCsvBusy(true);
     setAiError('');
     try {
-      const r = await fetch(`${base}/manage/${s.id}/answers.csv?page=1`, {
+      const r = await fetch(`${base}/manage/${s.id}/answers.csv?all=1`, {
         headers: { authorization: `Bearer ${s.key}` },
       });
       if (!r.ok) throw new Error('CSV 파일을 내려받지 못했어요.');
-      saveBlob(await r.blob(), `설문-분석-${s.id}.csv`);
-      setNotice('설문 응답 데이터를 CSV로 저장했어요.');
+      saveBlob(await r.blob(), `설문응답원문-${s.id}.csv`);
+      setNotice('수집된 설문 응답 원문을 CSV로 저장했어요.');
     } catch (e) {
-      setAiError(e instanceof Error ? e.message : 'CSV 내보내기에 실패했어요.');
+      if (summary && summary.responses.length > 0) {
+        const file = exportSurveyRawResponsesCsv(summary);
+        setNotice(`수집된 설문 응답 원문(${file})을 CSV로 저장했어요.`);
+      } else {
+        setAiError(e instanceof Error ? e.message : 'CSV 내보내기에 실패했어요.');
+      }
     } finally {
       setCsvBusy(false);
     }
@@ -252,8 +265,12 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
         method: 'POST',
         headers: { authorization: `Bearer ${selectedKey.key}` },
       });
-      setAnalysisMap((prev) => ({ ...prev, [selectedKey.id]: result }));
-      setNotice('AI 응답 심층 분석과 키워드 감성 분류를 완료했어요.');
+      setAnalysisMap((prev) => {
+        const next = { ...prev, [selectedKey.id]: result };
+        demoStore.set(surveyAiStoreKey, next, true);
+        return next;
+      });
+      setNotice('AI 응답 심층 분석과 키워드 감성 분류를 완료했어요. 분석 결과 CSV에도 바로 반영돼요.');
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'AI 응답 분석에 실패했어요. 다시 시도해 주세요.');
     } finally {
@@ -324,7 +341,7 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
           <button
             type="button"
             disabled={state.loading}
-            onClick={state.reload}
+            onClick={() => state.reload()}
             className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
           >
             <RefreshCw size={14} aria-hidden="true" /> 새로고침
@@ -354,7 +371,26 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                 onClick={() => void exportCsv(selectedKey)}
                 className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
               >
-                <Download size={14} aria-hidden="true" /> CSV
+                <Download size={14} aria-hidden="true" /> 응답 원문 CSV
+              </button>
+              <button
+                type="button"
+                disabled={!summary || summary.count === 0}
+                onClick={() => {
+                  if (!summary) return;
+                  const file = exportSurveyAnalyticsCsv({
+                    summary,
+                    distributions,
+                    keywords,
+                    timeline,
+                    overallScaleAvg,
+                    aiAnalysis: currentAiAnalysis,
+                  });
+                  setNotice(`설문 분석 결과 데이터(${file})를 CSV로 저장했어요.`);
+                }}
+                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+              >
+                <Download size={14} aria-hidden="true" /> 분석 결과 CSV
               </button>
               <button
                 type="button"
@@ -744,15 +780,27 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                     : '위 키워드 차트를 클릭하면 관련 응답만 바로 모아볼 수 있어요.'}
                 </p>
               </div>
-              {selectedKeyword && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedKeyword('')}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#f5f1ff]"
-                >
-                  <FilterX size={14} aria-hidden="true" /> 전체 응답 보기
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedKeyword && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedKeyword('')}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#f5f1ff]"
+                  >
+                    <FilterX size={14} aria-hidden="true" /> 전체 응답 보기
+                  </button>
+                )}
+                {selectedKey && (
+                  <button
+                    type="button"
+                    disabled={summary.count === 0 || csvBusy}
+                    onClick={() => void exportCsv(selectedKey)}
+                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                  >
+                    <Download size={14} aria-hidden="true" /> 응답 원문 CSV
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="overflow-x-auto border-t border-[#efedf5]" role="region" aria-label="응답 원문 목록" tabIndex={0}>

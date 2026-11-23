@@ -24,6 +24,7 @@ import {
 } from '../lib/interviewAudio';
 import { questionGuideKey, type QuestionGuide } from '../lib/questionGuide';
 import { interviewPrompts, type Person } from '../lib/research';
+import { exportVoiceAnswersCsv } from '../lib/researchCsv';
 import { isLiveSpeechSupported, startLiveSpeech, type LiveSpeechController } from '../lib/speechStt';
 import { webtoonInterview, webtoonTopic } from '../lib/webtoonValidation';
 import { Modal, saveBlob } from './ResearchUI';
@@ -825,7 +826,21 @@ export function VoiceInterview({
         )}
 
         <section className="grid gap-2.5" aria-label="저장된 음성 답변 및 STT 기록">
-          <h3 className="text-sm font-bold text-[#22213a]">저장된 음성 답변 · STT 변환 기록 {answers.length}개</h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-[#22213a]">저장된 음성 답변 · STT 변환 기록 {answers.length}개</h3>
+            {answers.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const file = exportVoiceAnswersCsv(person, answers);
+                  setNotice(`음성 STT 기록(${file})을 CSV로 다운로드했어요.`);
+                }}
+                className="inline-flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-2.5 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+              >
+                <Download size={13} aria-hidden="true" /> STT 기록 CSV
+              </button>
+            )}
+          </div>
           {loading ? (
             <p className="text-[13px] text-[#62627a]">불러오는 중…</p>
           ) : answers.length === 0 ? (

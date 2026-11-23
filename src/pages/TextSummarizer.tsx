@@ -3,6 +3,7 @@ import {
   Check,
   CheckCircle2,
   Copy,
+  Download,
   FileText,
   RotateCcw,
   Sparkles,
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 import { api, demoStore } from '../lib/api';
 import { listAllVoiceAnswers, type VoiceAnswer } from '../lib/interviewAudio';
+import { exportTextSummaryCsv } from '../lib/researchCsv';
 import type { Person } from '../lib/research';
 
 export type SummaryStyle = 'concise' | 'bullet' | 'action';
@@ -406,6 +408,16 @@ export function TextSummarizer({
                   <Copy size={14} aria-hidden="true" /> 요약 결과 복사
                 </>
               )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const file = exportTextSummaryCsv(result, title);
+                setNotice(`텍스트 요약 결과를 CSV(${file})로 다운로드했어요.`);
+              }}
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+            >
+              <Download size={14} aria-hidden="true" /> 요약 CSV
             </button>
 
             {onSaveSummary && people.length > 0 && (

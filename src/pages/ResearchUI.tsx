@@ -11,11 +11,17 @@ export function saveBlob(blob: Blob, filename: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function download(rows: string[][], filename: string) {
+export function download(
+  rows: Array<Array<string | number | boolean | null | undefined>>,
+  filename: string,
+) {
   const text = rows
     .map((row) =>
       row
-        .map((value) => `"${(/^[\s]*[=+\-@]|^[\t\r\n]/.test(value) ? `'${value}` : value).replaceAll('"', '""')}"`)
+        .map((value) => {
+          const s = String(value ?? '');
+          return `"${(/^[\s]*[=+\-@]|^[\t\r\n]/.test(s) ? `'${s}` : s).replaceAll('"', '""')}"`;
+        })
         .join(','),
     )
     .join('\r\n');

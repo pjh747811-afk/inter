@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import type { SurveyQuestion } from './storage.ts';
 
 const PRIMARY_MODEL = 'gemini-4-hydrogen';
@@ -151,10 +151,8 @@ async function callGeminiJson<T>(options: {
   const ai = getAiClient();
   const attempts: Array<{ model: string; delayBeforeMs: number }> = [
     { model: PRIMARY_MODEL, delayBeforeMs: 0 },
-    { model: PRIMARY_MODEL, delayBeforeMs: 750 + Math.floor(Math.random() * 250) },
-    { model: PRIMARY_MODEL, delayBeforeMs: 1600 + Math.floor(Math.random() * 350) },
-    { model: FALLBACK_MODEL, delayBeforeMs: 300 },
-    { model: FALLBACK_MODEL, delayBeforeMs: 1200 + Math.floor(Math.random() * 300) },
+    { model: FALLBACK_MODEL, delayBeforeMs: 150 },
+    { model: FALLBACK_MODEL, delayBeforeMs: 700 + Math.floor(Math.random() * 250) },
   ];
 
   let lastInfo: ParsedAiError | null = null;
@@ -171,6 +169,9 @@ async function callGeminiJson<T>(options: {
         config: {
           responseMimeType: 'application/json',
           responseSchema: options.responseSchema,
+          ...(attempt.model === PRIMARY_MODEL
+            ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } }
+            : {}),
         },
       });
       return parseJsonResponse<T>(response.text, options.parseFallbackMsg);
@@ -445,10 +446,20 @@ export async function generateSurveyFromItem(input: {
     },
   });
 
+  const cleanTitle = String(parsed.title ?? '').trim().slice(0, 100);
+  const cleanIntro = String(parsed.intro ?? '').trim().slice(0, 2000);
+  const normalizedQuestions = normalizeQuestions(Array.isArray(parsed.questions) ? parsed.questions : []).slice(0, 10);
+
+  if (normalizedQuestions.length === 0) {
+    throw new AiApiError(502, '설문 문항을 충분히 생성하지 못했어요. 다시 시도해 주세요.');
+  }
+
   return {
-    title: parsed.title.slice(0, 100),
-    intro: parsed.intro.slice(0, 2000),
-    questions: normalizeQuestions(parsed.questions).slice(0, 10),
+    title: cleanTitle || `${input.item.trim().slice(0, 36)} · 고객검증 설문`,
+    intro:
+      cleanIntro ||
+      '안녕하세요. 서비스 개선 및 고객 경험 검증을 위한 짧은 설문(약 2~3분 소요)입니다. 모든 응답은 연구 목적 외에는 사용되지 않으며, 원하실 경우 언제든 참여를 중단하실 수 있습니다.',
+    questions: normalizedQuestions,
   };
 }
 
@@ -916,3 +927,188 @@ export async function summarizeResearchText(input: {
     summarizedAt: new Date().toISOString(),
   };
 }
+
+export type TemplateFocus = 'both' | 'interview' | 'survey';
+
+export interface GeneratedTemplateOutput {
+  id: string;
+  title: string;
+  category: '초기 검증' | '컨셉·제품' | '수익화·이탈' | '스크리닝';
+  situation: string;
+  whenToUse: string;
+  cautionTip: string;
+  surveyTitle: string;
+  surveyIntro: string;
+  interview: Array<{
+    stage: string;
+    prompt: string;
+    purpose: string;
+  }>;
+  survey: SurveyQuestion[];
+  isAiGenerated: true;
+  focus: TemplateFocus;
+  purposeInput: string;
+  audienceInput?: string;
+  createdAt: string;
+}
+
+export async function generateResearchTemplate(input: {
+  purpose: string;
+  audience?: string;
+  context?: string;
+  focus?: TemplateFocus;
+  count?: number;
+}): Promise<GeneratedTemplateOutput> {
+  const focus: TemplateFocus =
+    input.focus === 'interview' || input.focus === 'survey' ? input.focus : 'both';
+  const count = Math.max(4, Math.min(10, Math.round(Number(input.count) || 6)));
+
+  const focusInstruction =
+    focus === 'interview'
+      ? `사용자는 특히 "심층 인터뷰 질문지"를 원합니다. interview 배열에 핵심 흐름 순서대로 정확히 ${count}개의 깊이 있는 인터뷰 질문을 작성하고, survey 배열에는 인터뷰 전·후 보조로 쓸 수 있는 3개의 핵심 설문 문항을 구성하세요.`
+      : focus === 'survey'
+      ? `사용자는 특히 "설문 조사 항목"을 원합니다. survey 배열에 객관식(choice), 5점 척도(scale), 서술형(text)이 균형 있게 섞인 정확히 ${count}개의 설문 문항을 작성하고, interview 배열에는 설문 응답자 후속 심층 인터뷰용 핵심 질문 3개를 구성하세요.`
+      : `사용자는 인터뷰 질문지와 설문 항목을 모두 원합니다. interview 배열에 정확히 ${count}개의 인터뷰 질문을, survey 배열에 정확히 ${count}개의 구조화된 설문 문항을 작성하세요.`;
+
+  const prompt = [
+    '당신은 스타트업 고객검증(Mom Test 기반)과 정량·정성 사용자 리서치를 설계하는 수석 UX 리서처입니다.',
+    '사용자가 입력한 [리서치 목적]을 달성하기 위해 즉시 실무에 투입할 수 있는 맞춤형 질문 템플릿(상황 가이드 + 인터뷰 질문지 + 설문 문항)을 한국어로 설계하세요.',
+    '',
+    `[리서치 목적]: ${input.purpose}`,
+    input.audience ? `[대상 고객 / 응답자]: ${input.audience}` : '',
+    input.context ? `[서비스 · 제품 맥락]: ${input.context}` : '',
+    '',
+    '작성 규칙:',
+    `- ${focusInstruction}`,
+    '- title: 이 리서치 목적을 한눈에 드러내는 템플릿 제목 (28자 이내, 예: "온보딩 이탈 원인 · 첫 경험 검증")',
+    '- category: 반드시 "초기 검증", "컨셉·제품", "수익화·이탈", "스크리닝" 중 가장 적합한 1개를 선택하세요.',
+    '- situation: 언제 이 템플릿을 꺼내 쓰는지 1문장 요약.',
+    '- whenToUse: 권장 활용 시점과 추천 대상자 규모 안내 (1~2문장).',
+    '- cautionTip: 이 목적의 리서치에서 인터뷰어/설문 설계자가 흔히 저지르는 편향·유도 질문 실수와 예방법 (1~2문장).',
+    '- interview: 각 항목은 stage(예: "1. 최근 발생 맥락"), prompt(과거 실제 경험과 구체적 행동·비용을 끌어내는 비유도 질문), purpose(이 질문으로 검증할 핵심 포인트)를 포함하세요.',
+    '- surveyTitle: 응답자가 부담 없이 참여할 명확한 설문 제목 (50자 이내).',
+    '- surveyIntro: 설문 목적, 예상 소요 시간(약 2~3분), 익명·연구 목적 외 미사용 안내를 포함한 자연스러운 참여 안내문.',
+    '- survey: 각 문항의 type은 반드시 "text", "choice", "scale" 중 하나여야 합니다. type이 "choice"이면 options에 3~5개의 현실적인 선택지를 반드시 넣고, "text"나 "scale"이면 options는 빈 배열([])로 두세요.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const parsed = await callGeminiJson<{
+    title: string;
+    category: string;
+    situation: string;
+    whenToUse: string;
+    cautionTip: string;
+    surveyTitle: string;
+    surveyIntro: string;
+    interview: Array<{ stage: string; prompt: string; purpose: string }>;
+    survey: Array<{ label: string; type: string; required: boolean; options: string[] }>;
+  }>({
+    contents: prompt,
+    parseFallbackMsg: 'AI 질문 템플릿 생성 결과를 해석하지 못했어요. 다시 시도해 주세요.',
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        category: {
+          type: Type.STRING,
+          description: '초기 검증, 컨셉·제품, 수익화·이탈, 스크리닝 중 하나',
+        },
+        situation: { type: Type.STRING },
+        whenToUse: { type: Type.STRING },
+        cautionTip: { type: Type.STRING },
+        surveyTitle: { type: Type.STRING },
+        surveyIntro: { type: Type.STRING },
+        interview: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              stage: { type: Type.STRING },
+              prompt: { type: Type.STRING },
+              purpose: { type: Type.STRING },
+            },
+            required: ['stage', 'prompt', 'purpose'],
+          },
+        },
+        survey: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              label: { type: Type.STRING },
+              type: { type: Type.STRING, description: 'text, choice, scale 중 하나' },
+              required: { type: Type.BOOLEAN },
+              options: { type: Type.ARRAY, items: { type: Type.STRING } },
+            },
+            required: ['label', 'type', 'required', 'options'],
+          },
+        },
+      },
+      required: [
+        'title',
+        'category',
+        'situation',
+        'whenToUse',
+        'cautionTip',
+        'surveyTitle',
+        'surveyIntro',
+        'interview',
+        'survey',
+      ],
+    },
+  });
+
+  const allowedCategory =
+    parsed.category === '초기 검증' ||
+    parsed.category === '컨셉·제품' ||
+    parsed.category === '수익화·이탈' ||
+    parsed.category === '스크리닝'
+      ? parsed.category
+      : '초기 검증';
+
+  const normalizedInterview = (Array.isArray(parsed.interview) ? parsed.interview : [])
+    .filter((item) => item && typeof item.prompt === 'string' && item.prompt.trim().length > 0)
+    .slice(0, focus === 'survey' ? 5 : 10)
+    .map((item, idx) => ({
+      stage: String(item.stage ?? `${idx + 1}. 핵심 질문`).trim().slice(0, 48),
+      prompt: String(item.prompt).trim().slice(0, 320),
+      purpose: String(item.purpose ?? '핵심 경험 및 행동 신호 확인').trim().slice(0, 200),
+    }));
+
+  const normalizedSurvey = normalizeQuestions(
+    Array.isArray(parsed.survey) ? parsed.survey : [],
+  ).slice(0, focus === 'interview' ? 5 : 10);
+
+  if (normalizedInterview.length === 0 && normalizedSurvey.length === 0) {
+    throw new AiApiError(502, '질문 템플릿을 충분히 생성하지 못했어요. 목적을 조금 더 구체적으로 적어 시도해 주세요.');
+  }
+
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  return {
+    id: `ai-${Date.now().toString(36)}-${randomSuffix}`,
+    title: String(parsed.title ?? '').trim().slice(0, 60) || `${input.purpose.trim().slice(0, 24)} · 맞춤 템플릿`,
+    category: allowedCategory,
+    situation: String(parsed.situation ?? '').trim().slice(0, 200) || input.purpose.trim().slice(0, 200),
+    whenToUse:
+      String(parsed.whenToUse ?? '').trim().slice(0, 300) ||
+      '리서치 목적에 맞는 타겟 고객을 대상으로 인터뷰나 사전 설문을 진행할 때 활용하세요.',
+    cautionTip:
+      String(parsed.cautionTip ?? '').trim().slice(0, 300) ||
+      '가정형 질문 대신 최근 실제 경험과 행동, 지출 내역을 중심으로 여쭤보세요.',
+    surveyTitle:
+      String(parsed.surveyTitle ?? '').trim().slice(0, 100) ||
+      `${input.purpose.trim().slice(0, 34)} · 고객 리서치 설문`,
+    surveyIntro:
+      String(parsed.surveyIntro ?? '').trim().slice(0, 2000) ||
+      '안녕하세요. 서비스 개선과 고객 경험 파악을 위한 짧은 설문(약 2~3분 소요)입니다. 솔직한 경험과 의견을 들려주시면 큰 도움이 됩니다.',
+    interview: normalizedInterview,
+    survey: normalizedSurvey,
+    isAiGenerated: true,
+    focus,
+    purposeInput: input.purpose.trim(),
+    audienceInput: input.audience?.trim() || undefined,
+    createdAt: new Date().toISOString(),
+  };
+}
+

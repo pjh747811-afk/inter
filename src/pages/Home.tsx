@@ -6,6 +6,7 @@ import {
   BarChart3,
   BookOpen,
   CalendarDays,
+  ChevronLeft,
   ChevronRight,
   CircleCheck,
   ClipboardList,
@@ -22,22 +23,31 @@ import {
   Search,
   SlidersHorizontal,
   Sparkles,
+  Upload,
   Users,
 } from 'lucide-react';
 import { demoStore } from '../lib/api';
 import { groups, interviewPrompts, statuses, type Person } from '../lib/research';
-import { deletePersonAudio } from '../lib/interviewAudio';
+import { deletePersonAudio, listAllVoiceAnswers } from '../lib/interviewAudio';
+import {
+  interviewAnalysisKey,
+  questionGuideKey,
+  type InterviewAnalysis,
+  type QuestionGuide,
+} from '../lib/questionGuide';
+import { exportAllResearchBundleCsv, exportCollectedInterviewsCsv } from '../lib/researchCsv';
 import { webtoonInterview, webtoonTopic } from '../lib/webtoonValidation';
 import type { ResearchTemplate } from '../lib/researchTemplates';
 import { useWorkspaceSync } from '../lib/workspaceSync';
+import { BulkPersonImportModal } from './BulkPersonImportModal';
 import { download, Modal, PersonForm } from './ResearchUI';
 import { Surveys, useSurveys } from './Surveys';
 import { SurveyAnalytics } from './SurveyAnalytics';
 import { ResearchTemplates } from './ResearchTemplates';
 import { VoiceInterview } from './VoiceInterview';
 import { QuestionGenerator } from './QuestionGenerator';
-import { InterviewSentimentPanel } from './InterviewSentimentPanel';
-import { TextSummarizer } from './TextSummarizer';
+import { InterviewSentimentPanel, type SentimentTrendOutput } from './InterviewSentimentPanel';
+import { TextSummarizer, type TextSummaryOutput } from './TextSummarizer';
 import { DeviceSyncModal } from './DeviceSyncModal';
 
 const peopleStore = 'research.people.v1';
@@ -96,6 +106,8 @@ export default function Home() {
   const [quickVoiceName, setQuickVoiceName] = useState('');
   const [summaryModal, setSummaryModal] = useState<{ title: string; text: string } | null>(null);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [page, setPage] = useState(1);
   const surveyState = useSurveys();
 
   const workspaceSync = useWorkspaceSync({
@@ -121,9 +133,21 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (section.id === 'home' || section.id === 'surveys' || section.id === 'analytics') {
+      surveyState.reload(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section.id]);
+
   const query = params.get('q') ?? '';
   const group = params.get('group') ?? '';
   const status = params.get('status') ?? '';
+  const PAGE_SIZE = 20;
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, group, status]);
 
   function filter(name: string, value: string) {
     const next = new URLSearchParams(params);
@@ -141,6 +165,49 @@ export default function Home() {
     store(editing === 'new' ? [p, ...people] : people.map((r) => (r.id === p.id ? p : r)));
     setEditing(null);
     setNotice('대상자 정보를 저장했어요.');
+  }
+
+  function importPeopleBatch(imported: Person[]) {
+    if (!imported.length) return;
+    store([...imported, ...people]);
+    setBulkImportOpen(false);
+    setPage(1);
+    setNotice(`인터뷰 대상자 ${imported.length}명을 일괄 추가했어요.`);
+  }
+
+  async function exportCollectedTexts() {
+    const voiceAnswers = await listAllVoiceAnswers().catch(() => []);
+    const hasNotes = people.some((p) => p.note.trim() && !(p.sample && !p.note.trim()));
+    if (!hasNotes && voiceAnswers.length === 0) {
+      setNotice('내보낼 인터뷰 텍스트나 음성 STT 기록이 아직 없어요.');
+      return;
+    }
+    const file = exportCollectedInterviewsCsv(people, voiceAnswers);
+    setNotice(`수집된 인터뷰 텍스트를 CSV(${file})로 다운로드했어요.`);
+  }
+
+  async function exportAllResearchCsv() {
+    const voiceAnswers = await listAllVoiceAnswers().catch(() => []);
+    const guide = demoStore.get<QuestionGuide | null>(questionGuideKey, null);
+    const interviewAnalysis = demoStore.get<InterviewAnalysis | null>(interviewAnalysisKey, null);
+    const sentimentCache = demoStore.get<Record<string, { fingerprint: string; result: SentimentTrendOutput }>>(
+      'research.sentiment-trend.v1',
+      {},
+    );
+    const sentimentResults = Object.values(sentimentCache).map((item) => item.result);
+    const textSummary = demoStore.get<TextSummaryOutput | null>('research.text-summary.v1', null);
+    const surveySummaries = Object.values(surveyState.summaries);
+
+    const file = exportAllResearchBundleCsv({
+      people,
+      voiceAnswers,
+      guide,
+      interviewAnalysis,
+      sentimentResults,
+      textSummary,
+      surveySummaries,
+    });
+    setNotice(`리서치·수집 인터뷰·분석 데이터 통합 CSV(${file})를 다운로드했어요.`);
   }
 
   function appendPersonInsight(personId: string, summaryText: string) {
@@ -169,6 +236,10 @@ export default function Home() {
       (!status || p.status === status) &&
       `${p.name} ${p.desc} ${p.alternative}`.toLowerCase().includes(query.trim().toLowerCase()),
   );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   const counts = [
     people.length,
     people.filter((p) => p.status === '일정 확정').length,
@@ -332,6 +403,22 @@ export default function Home() {
         </header>
 
         <main id="workspace-main" tabIndex={-1} className="mx-auto grid max-w-[1400px] gap-5 px-4 pt-5 pb-24 sm:px-8 lg:pt-6 lg:pb-6">
+          {notice && (
+            <div
+              role="status"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dfd4fb] bg-[#f5f1ff] px-4 py-2.5 text-[13px] font-medium text-[#4d30cf]"
+            >
+              <span>{notice}</span>
+              <button
+                type="button"
+                onClick={() => setNotice('')}
+                className="text-xs font-bold text-[#4d30cf] hover:underline"
+              >
+                닫기
+              </button>
+            </div>
+          )}
+
           {section.id === 'home' && (
             <>
               <section className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-[#e9defe] bg-[#f0eaff] px-6 py-7 sm:flex-row sm:items-center sm:px-8">
@@ -367,6 +454,12 @@ export default function Home() {
                       className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#faf8ff]"
                     >
                       설문 만들기 <ArrowRight size={15} aria-hidden="true" />
+                    </Link>
+                    <Link
+                      to="/?view=templates"
+                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#4d30cf] hover:bg-[#faf8ff]"
+                    >
+                      <Library size={15} aria-hidden="true" /> 질문 템플릿 생성
                     </Link>
                   </div>
                 </div>
@@ -411,6 +504,13 @@ export default function Home() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
+                      onClick={() => setBulkImportOpen(true)}
+                      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee8ff]"
+                    >
+                      <Upload size={14} aria-hidden="true" /> 일괄 추가
+                    </button>
+                    <button
+                      type="button"
                       disabled={!filtered.some((p) => !p.sample)}
                       onClick={() =>
                         download(
@@ -423,7 +523,7 @@ export default function Home() {
                           '인터뷰-대상자.csv',
                         )
                       }
-                      title="현재 검색 결과에서 예시를 제외하고 내보내기"
+                      title="현재 검색 결과에서 예시를 제외하고 전체 내보내기"
                       className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
                     >
                       <Download size={14} aria-hidden="true" /> CSV 내보내기
@@ -481,7 +581,8 @@ export default function Home() {
 
                 {/* Mobile Card List (< md) */}
                 <div className="divide-y divide-[#efedf5] border-t border-[#efedf5] md:hidden" role="region" aria-label="모바일 대상자 목록">
-                  {filtered.map((p, i) => {
+                  {paginated.map((p, i) => {
+                    const globalIdx = (currentPage - 1) * PAGE_SIZE + i;
                     const statusStyle =
                       p.status === '완료'
                         ? 'text-[#14674d]'
@@ -495,7 +596,7 @@ export default function Home() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex min-w-0 items-center gap-2.5">
                             <span
-                              className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[i % 4]}`}
+                              className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[globalIdx % 4]}`}
                               aria-hidden="true"
                             >
                               {p.name.slice(0, 1)}
@@ -585,7 +686,8 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#efedf5]">
-                      {filtered.map((p, i) => {
+                      {paginated.map((p, i) => {
+                        const globalIdx = (currentPage - 1) * PAGE_SIZE + i;
                         const statusStyle =
                           p.status === '완료'
                             ? 'text-[#14674d]'
@@ -599,7 +701,7 @@ export default function Home() {
                             <td className="py-2.5 pl-5 pr-3">
                               <div className="flex items-center gap-2.5">
                                 <span
-                                  className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[i % 4]}`}
+                                  className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[globalIdx % 4]}`}
                                   aria-hidden="true"
                                 >
                                   {p.name.slice(0, 1)}
@@ -643,17 +745,47 @@ export default function Home() {
 
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e9e7f1] px-5 py-3 text-xs text-[#62627a]">
                   <span className="tnum">
-                    대상자 {filtered.length}명 <span className="hidden sm:inline">· 이 브라우저에 저장</span>
+                    대상자 {filtered.length}명
+                    {filtered.length > PAGE_SIZE
+                      ? ` (${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} 표시)`
+                      : ''}
+                    <span className="hidden sm:inline"> · 이 브라우저에 저장</span>
                   </span>
-                  {people.some((p) => p.sample) && (
-                    <button
-                      type="button"
-                      onClick={() => setHideSamples(true)}
-                      className="font-bold text-[#5b3df5] hover:underline"
-                    >
-                      예시 데이터 지우기
-                    </button>
-                  )}
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {filtered.length > PAGE_SIZE && (
+                      <div className="tnum flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          disabled={currentPage <= 1}
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          className="inline-flex min-h-7 items-center gap-0.5 rounded-md border border-[#e2deee] bg-white px-2 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                        >
+                          <ChevronLeft size={13} aria-hidden="true" /> 이전
+                        </button>
+                        <span className="font-mono text-xs font-semibold text-[#22213a]">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          className="inline-flex min-h-7 items-center gap-0.5 rounded-md border border-[#e2deee] bg-white px-2 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                        >
+                          다음 <ChevronRight size={13} aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
+                    {people.some((p) => p.sample) && (
+                      <button
+                        type="button"
+                        onClick={() => setHideSamples(true)}
+                        className="font-bold text-[#5b3df5] hover:underline"
+                      >
+                        예시 데이터 지우기
+                      </button>
+                    )}
+                  </div>
                 </div>
               </section>
 
@@ -718,6 +850,20 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void exportCollectedTexts()}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3.5 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                  >
+                    <Download size={15} aria-hidden="true" /> 수집 텍스트 CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void exportAllResearchCsv()}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3.5 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                  >
+                    <Download size={15} aria-hidden="true" /> 리서치·분석 통합 CSV
+                  </button>
                   <button
                     type="button"
                     onClick={() => setVoice('pick')}
@@ -1147,6 +1293,10 @@ export default function Home() {
             pushNow={workspaceSync.pushNow}
           />
         </Modal>
+      )}
+
+      {bulkImportOpen && (
+        <BulkPersonImportModal close={() => setBulkImportOpen(false)} onImport={importPeopleBatch} />
       )}
     </div>
   );
