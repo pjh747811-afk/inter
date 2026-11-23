@@ -30,9 +30,31 @@ export interface StoredResponse {
   createdAt: string;
 }
 
+export type DeviceType = 'pc' | 'mobile';
+
+export interface SyncPayload {
+  people?: unknown[];
+  surveyKeys?: unknown[];
+  questionVault?: unknown;
+  questionGuide?: unknown;
+  interviewAnalysis?: unknown;
+  sentimentTrend?: unknown;
+  textSummary?: unknown;
+  activeView?: string;
+}
+
+export interface StoredWorkspace {
+  id: string;
+  version: number;
+  updatedAt: string;
+  updatedByDevice: DeviceType;
+  data: SyncPayload;
+}
+
 interface ResearchDatabase {
   surveys: StoredSurvey[];
   responses: StoredResponse[];
+  workspaces?: Record<string, StoredWorkspace>;
 }
 
 const DATA_DIR = path.resolve(process.cwd(), '.data');
@@ -49,7 +71,7 @@ function ensureDir() {
 async function readDb(): Promise<ResearchDatabase> {
   ensureDir();
   if (!existsSync(DB_FILE)) {
-    return { surveys: [], responses: [] };
+    return { surveys: [], responses: [], workspaces: {} };
   }
   try {
     const raw = await readFile(DB_FILE, 'utf8');
@@ -57,9 +79,11 @@ async function readDb(): Promise<ResearchDatabase> {
     return {
       surveys: Array.isArray(parsed.surveys) ? parsed.surveys : [],
       responses: Array.isArray(parsed.responses) ? parsed.responses : [],
+      workspaces:
+        parsed.workspaces && typeof parsed.workspaces === 'object' ? parsed.workspaces : {},
     };
   } catch {
-    return { surveys: [], responses: [] };
+    return { surveys: [], responses: [], workspaces: {} };
   }
 }
 
@@ -227,4 +251,76 @@ export async function exportSurveyCsv(id: string, ownerKey: string, page = 1) {
 
   const csv = '\uFEFF' + [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\r\n');
   return { status: 200 as const, csv };
+}
+
+const SYNC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function generateSyncCode(): string {
+  const bytes = randomBytes(6);
+  let out = '';
+  for (let i = 0; i < 6; i++) {
+    out += SYNC_ALPHABET[bytes[i] % SYNC_ALPHABET.length];
+  }
+  return out;
+}
+
+export function normalizeSyncId(raw: string): string {
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 16);
+}
+
+export async function createSyncWorkspace(input: {
+  initialData?: SyncPayload;
+  device?: DeviceType;
+}): Promise<StoredWorkspace> {
+  return mutateDb((db) => {
+    if (!db.workspaces) db.workspaces = {};
+    let id = generateSyncCode();
+    while (db.workspaces[id]) {
+      id = generateSyncCode();
+    }
+    const workspace: StoredWorkspace = {
+      id,
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      updatedByDevice: input.device === 'mobile' ? 'mobile' : 'pc',
+      data: input.initialData ?? {},
+    };
+    db.workspaces[id] = workspace;
+    return workspace;
+  });
+}
+
+export async function getSyncWorkspace(rawId: string): Promise<StoredWorkspace | null> {
+  const id = normalizeSyncId(rawId);
+  if (!id) return null;
+  const db = await readDb();
+  return db.workspaces?.[id] ?? null;
+}
+
+export async function updateSyncWorkspace(
+  rawId: string,
+  input: { data: SyncPayload; device?: DeviceType; clientId?: string },
+): Promise<StoredWorkspace | null> {
+  const id = normalizeSyncId(rawId);
+  if (!id) return null;
+  return mutateDb((db) => {
+    if (!db.workspaces) db.workspaces = {};
+    const existing = db.workspaces[id];
+    if (!existing) return null;
+    const merged: SyncPayload = { ...existing.data };
+    for (const [k, v] of Object.entries(input.data)) {
+      if (v !== undefined) {
+        (merged as Record<string, unknown>)[k] = v;
+      }
+    }
+    const next: StoredWorkspace = {
+      id,
+      version: existing.version + 1,
+      updatedAt: new Date().toISOString(),
+      updatedByDevice: input.device === 'mobile' ? 'mobile' : 'pc',
+      data: merged,
+    };
+    db.workspaces[id] = next;
+    return next;
+  });
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
   ArrowRight,
@@ -16,6 +16,7 @@ import {
   Library,
   Lightbulb,
   Mic,
+  MonitorSmartphone,
   MoreHorizontal,
   Plus,
   Search,
@@ -28,6 +29,7 @@ import { groups, interviewPrompts, statuses, type Person } from '../lib/research
 import { deletePersonAudio } from '../lib/interviewAudio';
 import { webtoonInterview, webtoonTopic } from '../lib/webtoonValidation';
 import type { ResearchTemplate } from '../lib/researchTemplates';
+import { useWorkspaceSync } from '../lib/workspaceSync';
 import { download, Modal, PersonForm } from './ResearchUI';
 import { Surveys, useSurveys } from './Surveys';
 import { SurveyAnalytics } from './SurveyAnalytics';
@@ -36,6 +38,7 @@ import { VoiceInterview } from './VoiceInterview';
 import { QuestionGenerator } from './QuestionGenerator';
 import { InterviewSentimentPanel } from './InterviewSentimentPanel';
 import { TextSummarizer } from './TextSummarizer';
+import { DeviceSyncModal } from './DeviceSyncModal';
 
 const peopleStore = 'research.people.v1';
 const samples: Person[] = [
@@ -58,12 +61,12 @@ const samples: Person[] = [
 }));
 
 const sections = [
-  { id: 'home', name: '대시보드', icon: LayoutDashboard },
-  { id: 'people', name: '인터뷰 대상자', icon: Users },
-  { id: 'surveys', name: '설문조사', icon: ClipboardList },
-  { id: 'analytics', name: '설문 분석', icon: BarChart3 },
-  { id: 'templates', name: '질문 템플릿', icon: Library },
-  { id: 'insights', name: '인사이트', icon: Lightbulb },
+  { id: 'home', name: '대시보드', shortName: '홈', icon: LayoutDashboard },
+  { id: 'people', name: '인터뷰 대상자', shortName: '대상자', icon: Users },
+  { id: 'surveys', name: '설문조사', shortName: '설문', icon: ClipboardList },
+  { id: 'analytics', name: '설문 분석', shortName: '분석', icon: BarChart3 },
+  { id: 'templates', name: '질문 템플릿', shortName: '템플릿', icon: Library },
+  { id: 'insights', name: '인사이트', shortName: '인사이트', icon: Lightbulb },
 ];
 
 const groupInfo = [
@@ -92,7 +95,31 @@ export default function Home() {
   const [voice, setVoice] = useState<Person | 'pick' | null>(null);
   const [quickVoiceName, setQuickVoiceName] = useState('');
   const [summaryModal, setSummaryModal] = useState<{ title: string; text: string } | null>(null);
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
   const surveyState = useSurveys();
+
+  const workspaceSync = useWorkspaceSync({
+    currentView: section.id,
+    onRemoteViewChange: (nextView) => {
+      if (!sections.some((s) => s.id === nextView)) return;
+      const next = new URLSearchParams(params);
+      if (nextView === 'home') next.delete('view');
+      else next.set('view', nextView);
+      setParams(next, { replace: true });
+    },
+  });
+
+  useEffect(() => {
+    const onSync = () => {
+      setPeople(demoStore.get(peopleStore, samples));
+    };
+    window.addEventListener('research-sync-applied', onSync);
+    window.addEventListener('storage', onSync);
+    return () => {
+      window.removeEventListener('research-sync-applied', onSync);
+      window.removeEventListener('storage', onSync);
+    };
+  }, []);
 
   const query = params.get('q') ?? '';
   const group = params.get('group') ?? '';
@@ -206,8 +233,8 @@ export default function Home() {
           </button>
         </div>
 
-        <nav aria-label="워크스페이스" className="mt-3 flex items-center gap-1 overflow-x-auto pb-0.5 lg:mt-8 lg:grid lg:grid-cols-1 lg:gap-1 lg:overflow-visible lg:pb-0">
-          <p className="hidden px-3 pb-1.5 text-[11px] font-bold tracking-wider text-[#8a86a0] lg:block">워크스페이스</p>
+        <nav aria-label="워크스페이스" className="hidden lg:mt-8 lg:grid lg:grid-cols-1 lg:gap-1">
+          <p className="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-[#8a86a0]">워크스페이스</p>
           {sections.map(({ id, name, icon: Icon }) => {
             const active = section.id === id;
             return (
@@ -215,13 +242,13 @@ export default function Home() {
                 key={id}
                 to={id === 'home' ? '/' : `/?view=${id}`}
                 aria-current={active ? 'page' : undefined}
-                className={`flex min-h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-colors lg:justify-start lg:gap-3 lg:text-sm ${
+                className={`flex min-h-10 shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
                   active
                     ? 'bg-[#eee9ff] font-bold text-[#4d30cf]'
                     : 'text-[#54546d] hover:bg-[#f6f4fd] hover:text-[#22213a]'
                 }`}
               >
-                <Icon size={17} aria-hidden="true" className="hidden shrink-0 sm:block" />
+                <Icon size={17} aria-hidden="true" className="shrink-0" />
                 <span>{name}</span>
               </Link>
             );
@@ -249,29 +276,47 @@ export default function Home() {
 
       {/* Main Workspace */}
       <div className="min-w-0">
-        <header className="flex h-15 items-center justify-between gap-4 border-b border-[#e9e7f1] bg-white px-4 sm:px-8">
-          <div className="flex items-center gap-2 text-[13px] text-[#62627a]">
-            <span>워크스페이스</span>
-            <ChevronRight size={13} aria-hidden="true" />
+        <header className="flex min-h-14 flex-wrap items-center justify-between gap-2 border-b border-[#e9e7f1] bg-white px-4 py-2 sm:px-8">
+          <div className="flex items-center gap-1.5 text-[13px] text-[#62627a]">
+            <span className="hidden sm:inline">워크스페이스</span>
+            <ChevronRight size={13} className="hidden sm:inline" aria-hidden="true" />
             <b className="font-semibold text-[#22213a]">{section.name}</b>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSyncModalOpen(true)}
+              className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 text-xs font-semibold transition-colors sm:px-3 ${
+                workspaceSync.syncId && workspaceSync.connected
+                  ? 'border-[#b7e2d1] bg-[#edf9f4] text-[#14674d] hover:bg-[#e1f5ed]'
+                  : 'border-[#e2deee] bg-white text-[#22213a] hover:bg-[#f7f7fb]'
+              }`}
+            >
+              <MonitorSmartphone size={14} aria-hidden="true" />
+              {workspaceSync.syncId ? (
+                <span className="tnum">
+                  연동 {workspaceSync.syncId} · PC {workspaceSync.presence.pcCount}/모바일 {workspaceSync.presence.mobileCount}
+                </span>
+              ) : (
+                <span>PC·모바일 연동</span>
+              )}
+            </button>
             {(section.id === 'home' || section.id === 'people') && (
               <button
                 type="button"
                 onClick={() => setVoice('pick')}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e5dcfc] bg-[#f5f1ff] px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee6ff]"
+                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e5dcfc] bg-[#f5f1ff] px-2.5 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee6ff] sm:px-3"
               >
-                <Mic size={15} aria-hidden="true" /> 음성 인터뷰
+                <Mic size={15} aria-hidden="true" /> <span className="hidden sm:inline">음성 인터뷰</span><span className="sm:hidden">녹음</span>
               </button>
             )}
             <button
               type="button"
               onClick={() => setSummaryModal({ title: '', text: '' })}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-2.5 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] sm:px-3"
             >
-              <FileText size={14} className="text-[#5b3df5]" aria-hidden="true" /> 텍스트 요약
+              <FileText size={14} className="text-[#5b3df5]" aria-hidden="true" /> <span className="hidden sm:inline">텍스트 요약</span><span className="sm:hidden">요약</span>
             </button>
             <button
               type="button"
@@ -286,7 +331,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main id="workspace-main" tabIndex={-1} className="mx-auto grid max-w-[1400px] gap-5 px-4 pt-6 sm:px-8">
+        <main id="workspace-main" tabIndex={-1} className="mx-auto grid max-w-[1400px] gap-5 px-4 pt-5 pb-24 sm:px-8 lg:pt-6 lg:pb-6">
           {section.id === 'home' && (
             <>
               <section className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-[#e9defe] bg-[#f0eaff] px-6 py-7 sm:flex-row sm:items-center sm:px-8">
@@ -434,7 +479,88 @@ export default function Home() {
                   </select>
                 </div>
 
-                <div className="overflow-x-auto" role="region" aria-label="대상자 목록" tabIndex={0}>
+                {/* Mobile Card List (< md) */}
+                <div className="divide-y divide-[#efedf5] border-t border-[#efedf5] md:hidden" role="region" aria-label="모바일 대상자 목록">
+                  {filtered.map((p, i) => {
+                    const statusStyle =
+                      p.status === '완료'
+                        ? 'text-[#14674d]'
+                        : p.status === '일정 확정'
+                        ? 'text-[#295dad]'
+                        : p.status === '거절/보류'
+                        ? 'text-[#9b3c58]'
+                        : 'text-[#8b4d17]';
+                    return (
+                      <article key={p.id} className="grid gap-2.5 px-4 py-3.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[i % 4]}`}
+                              aria-hidden="true"
+                            >
+                              {p.name.slice(0, 1)}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <b className="truncate font-bold text-[#22213a]">{p.name}</b>
+                                {p.sample && <span className="shrink-0 text-[11px] text-[#62627a]">· 예시</span>}
+                              </div>
+                              <p className="truncate text-xs text-[#62627a]">{p.desc || '특징 미입력'}</p>
+                            </div>
+                          </div>
+                          <span className={`shrink-0 text-xs font-bold ${statusStyle}`}>{p.status}</span>
+                        </div>
+
+                        <div className="tnum flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#62627a]">
+                          <span className="font-semibold text-[#4d30cf]">{p.group}</span>
+                          {p.source && (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <span>{p.source}</span>
+                            </>
+                          )}
+                          {p.date && (
+                            <>
+                              <span aria-hidden="true">·</span>
+                              <span className="font-mono">{p.date.replace('T', ' ')}</span>
+                            </>
+                          )}
+                        </div>
+
+                        {p.note && (
+                          <p className="line-clamp-2 rounded-lg bg-[#faf9fd] px-2.5 py-2 text-xs text-[#22213a]">
+                            {p.note}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setVoice(p)}
+                            className="inline-flex min-h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#e5dcfc] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf]"
+                          >
+                            <Mic size={13} aria-hidden="true" /> 음성 녹음
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditing(p)}
+                            className="inline-flex min-h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a]"
+                          >
+                            상세 편집
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {!filtered.length && (
+                    <p className="px-4 py-8 text-center text-sm text-[#62627a]">
+                      {people.length ? '검색 조건에 맞는 대상자가 없어요.' : '첫 인터뷰 대상자를 추가해 보세요.'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Desktop Table (>= md) */}
+                <div className="hidden overflow-x-auto md:block" role="region" aria-label="대상자 목록" tabIndex={0}>
                   <table className="w-full min-w-[640px] border-collapse text-left text-[13px] tnum">
                     <thead>
                       <tr className="border-t border-[#efedf5] bg-[#f8f8fc] text-xs font-semibold text-[#565771]">
@@ -716,10 +842,33 @@ export default function Home() {
           )}
         </main>
 
-        <footer className="mx-auto max-w-[1400px] px-4 py-6 text-xs text-[#62627a] sm:px-8">
+        <footer className="mx-auto hidden max-w-[1400px] px-4 py-6 text-xs text-[#62627a] sm:px-8 lg:block">
           리서치랩 · 고객 인터뷰와 연구 설문
         </footer>
       </div>
+
+      {/* Mobile Bottom Navigation (< lg) */}
+      <nav
+        aria-label="모바일 하단 메뉴"
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[#e9e7f1] bg-white/95 px-1 py-1.5 backdrop-blur lg:hidden"
+      >
+        {sections.map(({ id, shortName, icon: Icon }) => {
+          const active = section.id === id;
+          return (
+            <Link
+              key={id}
+              to={id === 'home' ? '/' : `/?view=${id}`}
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1 text-[11px] font-semibold transition-colors ${
+                active ? 'text-[#5b3df5] font-bold' : 'text-[#62627a]'
+              }`}
+            >
+              <Icon size={18} aria-hidden="true" />
+              <span className="truncate">{shortName}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       <div className="sr-only" role="status">
         {notice}
@@ -975,6 +1124,28 @@ export default function Home() {
               예시 지우기
             </button>
           </div>
+        </Modal>
+      )}
+
+      {syncModalOpen && (
+        <Modal title="PC · 모바일 실시간 연동" close={() => setSyncModalOpen(false)} wide>
+          <DeviceSyncModal
+            syncId={workspaceSync.syncId}
+            currentView={section.id}
+            deviceType={workspaceSync.deviceType}
+            connected={workspaceSync.connected}
+            reconnecting={workspaceSync.reconnecting}
+            presence={workspaceSync.presence}
+            lastSyncedAt={workspaceSync.lastSyncedAt}
+            syncError={workspaceSync.syncError}
+            busy={workspaceSync.busy}
+            followScreen={workspaceSync.followScreen}
+            setFollowScreen={workspaceSync.setFollowScreen}
+            createRoom={workspaceSync.createRoom}
+            joinRoom={workspaceSync.joinRoom}
+            disconnect={workspaceSync.disconnect}
+            pushNow={workspaceSync.pushNow}
+          />
         </Modal>
       )}
     </div>

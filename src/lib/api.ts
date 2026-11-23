@@ -34,9 +34,12 @@ export const demoStore = {
       return fallback;
     }
   },
-  set<T>(key: string, value: T): void {
+  set<T>(key: string, value: T, silent = false): void {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      if (!silent && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('research-store-change', { detail: { key } }));
+      }
     } catch {
       // Ignore quota or storage restriction errors
     }

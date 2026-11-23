@@ -41,6 +41,18 @@ export function useSurveys() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const onSync = () => {
+      setKeys(demoStore.get<SurveyKey[]>(surveyStore, []));
+    };
+    window.addEventListener('research-sync-applied', onSync);
+    window.addEventListener('storage', onSync);
+    return () => {
+      window.removeEventListener('research-sync-applied', onSync);
+      window.removeEventListener('storage', onSync);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!keys.length) {
       setSummaries({});
       setError(false);

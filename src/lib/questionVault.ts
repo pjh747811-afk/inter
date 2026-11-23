@@ -163,9 +163,11 @@ export function useQuestionVault() {
   useEffect(() => {
     const sync = () => setVault(readVault());
     window.addEventListener(VAULT_SYNC_EVENT, sync);
+    window.addEventListener('research-sync-applied', sync);
     window.addEventListener('storage', sync);
     return () => {
       window.removeEventListener(VAULT_SYNC_EVENT, sync);
+      window.removeEventListener('research-sync-applied', sync);
       window.removeEventListener('storage', sync);
     };
   }, []);

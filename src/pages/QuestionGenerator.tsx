@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import {
   ArrowRight,
@@ -89,6 +89,15 @@ export function QuestionGenerator({
   const [copyText, setCopyText] = useState('');
   const heading = useRef<HTMLHeadingElement>(null);
   const analysisHeading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const onSync = () => {
+      setResult(demoStore.get<QuestionGuide | null>(questionGuideKey, null));
+      setAnalysisResult(demoStore.get<InterviewAnalysis | null>(interviewAnalysisKey, null));
+    };
+    window.addEventListener('research-sync-applied', onSync);
+    return () => window.removeEventListener('research-sync-applied', onSync);
+  }, []);
 
   async function generate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -109,6 +109,14 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
   const chartWidth = useContainerWidth(chartBoxRef, 640);
 
   useEffect(() => {
+    const onSync = () => {
+      setCacheMap(demoStore.get<Record<string, StoredSentimentCache>>(SENTIMENT_CACHE_KEY, {}));
+    };
+    window.addEventListener('research-sync-applied', onSync);
+    return () => window.removeEventListener('research-sync-applied', onSync);
+  }, []);
+
+  useEffect(() => {
     let ignore = false;
     void listAllVoiceAnswers()
       .then((rows) => {

@@ -14,13 +14,52 @@ import {
 } from './server/ai.ts';
 import {
   createSurvey,
+  createSyncWorkspace,
   exportSurveyCsv,
   getManagedSurvey,
   getPublicSurvey,
+  getSyncWorkspace,
+  normalizeSyncId,
   setSurveyActive,
   submitSurveyResponse,
+  updateSyncWorkspace,
+  type DeviceType,
   type SurveyQuestion,
+  type SyncPayload,
 } from './server/storage.ts';
+
+interface SyncClient {
+  res: express.Response;
+  device: DeviceType;
+}
+
+const syncRooms = new Map<string, Set<SyncClient>>();
+
+function getSyncPresence(workspaceId: string) {
+  const clients = syncRooms.get(workspaceId);
+  let pcCount = 0;
+  let mobileCount = 0;
+  if (clients) {
+    for (const c of clients) {
+      if (c.device === 'mobile') mobileCount++;
+      else pcCount++;
+    }
+  }
+  return { pcCount, mobileCount, totalConnected: pcCount + mobileCount };
+}
+
+function broadcastSync(workspaceId: string, event: string, payload: unknown) {
+  const clients = syncRooms.get(workspaceId);
+  if (!clients || clients.size === 0) return;
+  const serialized = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const client of clients) {
+    try {
+      client.res.write(serialized);
+    } catch {
+      clients.delete(client);
+    }
+  }
+}
 
 const app = express();
 app.use(express.json({ limit: '25mb' }));
@@ -347,6 +386,102 @@ app.get('/api/research/manage/:id/answers.csv', async (req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="survey-${req.params.id}-page-${page}.csv"`);
   res.send(result.csv);
+});
+
+// Cross-device PC <-> Mobile Sync API
+app.post('/api/sync/create', async (req, res) => {
+  try {
+    const device: DeviceType = req.body?.device === 'mobile' ? 'mobile' : 'pc';
+    const initialData = (req.body?.data && typeof req.body.data === 'object' ? req.body.data : {}) as SyncPayload;
+    const workspace = await createSyncWorkspace({ initialData, device });
+    res.status(201).json({
+      workspace,
+      presence: getSyncPresence(workspace.id),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '연동 워크스페이스를 만들지 못했어요.';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.get('/api/sync/:id', async (req, res) => {
+  const id = normalizeSyncId(req.params.id);
+  const workspace = await getSyncWorkspace(id);
+  if (!workspace) {
+    res.status(404).json({ error: '일치하는 연동 코드를 찾지 못했어요. 코드를 다시 확인해 주세요.' });
+    return;
+  }
+  res.json({
+    workspace,
+    presence: getSyncPresence(workspace.id),
+  });
+});
+
+app.put('/api/sync/:id', async (req, res) => {
+  try {
+    const id = normalizeSyncId(req.params.id);
+    const device: DeviceType = req.body?.device === 'mobile' ? 'mobile' : 'pc';
+    const clientId = String(req.body?.clientId ?? '').slice(0, 64);
+    const data = (req.body?.data && typeof req.body.data === 'object' ? req.body.data : {}) as SyncPayload;
+
+    const workspace = await updateSyncWorkspace(id, { data, device, clientId });
+    if (!workspace) {
+      res.status(404).json({ error: '연결된 워크스페이스를 찾지 못했어요.' });
+      return;
+    }
+
+    const presence = getSyncPresence(workspace.id);
+    broadcastSync(workspace.id, 'sync', { workspace, presence, sourceClientId: clientId });
+    res.json({ workspace, presence });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '동기화 저장에 실패했어요.';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.get('/api/sync/:id/events', async (req, res) => {
+  const id = normalizeSyncId(req.params.id);
+  const workspace = await getSyncWorkspace(id);
+  if (!workspace) {
+    res.status(404).json({ error: '연동 코드를 찾을 수 없어요.' });
+    return;
+  }
+
+  const device: DeviceType = req.query.device === 'mobile' ? 'mobile' : 'pc';
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  let room = syncRooms.get(id);
+  if (!room) {
+    room = new Set();
+    syncRooms.set(id, room);
+  }
+  const client: SyncClient = { res, device };
+  room.add(client);
+
+  const presence = getSyncPresence(id);
+  res.write(`event: init\ndata: ${JSON.stringify({ workspace, presence })}\n\n`);
+  broadcastSync(id, 'presence', { presence });
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      clearInterval(heartbeat);
+    }
+  }, 20000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    room?.delete(client);
+    if (room && room.size === 0) {
+      syncRooms.delete(id);
+    } else {
+      broadcastSync(id, 'presence', { presence: getSyncPresence(id) });
+    }
+  });
 });
 
 const PORT = 3000;

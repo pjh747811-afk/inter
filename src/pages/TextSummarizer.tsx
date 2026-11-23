@@ -67,6 +67,14 @@ export function TextSummarizer({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    const onSync = () => {
+      setResult(demoStore.get<TextSummaryOutput | null>(LAST_SUMMARY_KEY, null));
+    };
+    window.addEventListener('research-sync-applied', onSync);
+    return () => window.removeEventListener('research-sync-applied', onSync);
+  }, []);
+
+  useEffect(() => {
     let ignore = false;
     void listAllVoiceAnswers()
       .then((rows) => {
