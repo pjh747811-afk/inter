@@ -85,19 +85,36 @@ export function startLiveSpeech(callbacks: {
     callbacks.onUpdate(committed, currentInterim);
   };
 
+  let errorCount = 0;
+  let restartTimer: number | null = null;
+
   recognition.onerror = (event) => {
-    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+    if (
+      event.error === 'not-allowed' ||
+      event.error === 'service-not-allowed' ||
+      event.error === 'audio-capture' ||
+      event.error === 'network' ||
+      event.error === 'language-not-supported'
+    ) {
+      active = false;
+      return;
+    }
+    errorCount++;
+    if (errorCount > 5) {
       active = false;
     }
   };
 
   recognition.onend = () => {
     if (!active) return;
-    try {
-      recognition.start();
-    } catch {
-      active = false;
-    }
+    restartTimer = window.setTimeout(() => {
+      if (!active) return;
+      try {
+        recognition.start();
+      } catch {
+        active = false;
+      }
+    }, 200);
   };
 
   try {
@@ -109,6 +126,10 @@ export function startLiveSpeech(callbacks: {
   return {
     stop: () => {
       active = false;
+      if (restartTimer !== null) {
+        window.clearTimeout(restartTimer);
+        restartTimer = null;
+      }
       try {
         recognition.stop();
       } catch {

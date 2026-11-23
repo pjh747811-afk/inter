@@ -565,18 +565,32 @@ export async function transcribeInterviewAudio(input: {
   question?: string;
   personName?: string;
 }): Promise<{ transcript: string; model: string }> {
-  const ai = getAiClient();
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    throw new AiApiError(
+      503,
+      'GEMINI_API_KEY가 설정되지 않았습니다. Settings > Secrets 패널에서 API 키를 확인해 주세요.',
+    );
+  }
+  const aiV1Beta = new GoogleGenAI({
+    apiKey,
+    apiVersion: 'v1beta',
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
+  });
+  const aiDefault = getAiClient();
+
   const cleanMimeType = input.mimeType.split(';')[0].trim().toLowerCase() || 'audio/webm';
   const prompt = [
-    '다음은 고객 검증 인터뷰 음성 녹음 파일입니다.',
-    input.personName ? `인터뷰 대상자: ${input.personName}` : '',
-    input.question ? `인터뷰 질문: "${input.question}"` : '',
-    '음성에 들리는 발화 내용을 한국어(영어·외래어·고유명사는 자연스러운 원문 또는 한국어 통용 표기)로 문장 부호를 살려 정확하게 받아적으세요.',
-    '해설, 요약, 말머리, 타임스탬프를 임의로 붙이지 말고 실제로 말한 내용만 출력하세요.',
-    '들리는 발화가 전혀 없거나 무음뿐이면 "(인식된 음성이 없습니다)"라고만 출력하세요.',
-  ]
-    .filter(Boolean)
-    .join('\n');
+    '첨부된 오디오 파일의 실제 음성 발화만 한국어로 정확하게 받아적으세요.',
+    '규칙:',
+    '- 오디오에서 실제로 들린 말만 문장 부호를 살려 그대로 작성하세요.',
+    '- 들리는 말이 없거나 배경 소음/무음뿐이면 정확히 "(인식된 음성이 없습니다)"라고만 출력하세요.',
+    '- 설명, 인사말, 질문 반복, 타임스탬프, 파일 누락 안내는 절대 출력하지 마세요.',
+  ].join('\n');
 
   const audioPart = {
     inlineData: {
@@ -585,11 +599,11 @@ export async function transcribeInterviewAudio(input: {
     },
   };
 
-  const attempts: Array<{ model: string; delayBeforeMs: number }> = [
-    { model: TRANSCRIBE_MODEL, delayBeforeMs: 0 },
-    { model: TRANSCRIBE_MODEL, delayBeforeMs: 700 + Math.floor(Math.random() * 250) },
-    { model: PRIMARY_MODEL, delayBeforeMs: 300 },
-    { model: FALLBACK_MODEL, delayBeforeMs: 900 + Math.floor(Math.random() * 250) },
+  const attempts: Array<{ model: string; client: GoogleGenAI; delayBeforeMs: number }> = [
+    { model: TRANSCRIBE_MODEL, client: aiV1Beta, delayBeforeMs: 0 },
+    { model: FALLBACK_MODEL, client: aiV1Beta, delayBeforeMs: 250 },
+    { model: FALLBACK_MODEL, client: aiDefault, delayBeforeMs: 800 },
+    { model: PRIMARY_MODEL, client: aiV1Beta, delayBeforeMs: 500 },
   ];
 
   let lastInfo: ParsedAiError | null = null;
@@ -599,7 +613,7 @@ export async function transcribeInterviewAudio(input: {
       await sleep(attempt.delayBeforeMs);
     }
     try {
-      const response = await ai.models.generateContent({
+      const response = await attempt.client.models.generateContent({
         model: attempt.model,
         contents: {
           parts: [audioPart, { text: prompt }],
@@ -607,18 +621,29 @@ export async function transcribeInterviewAudio(input: {
       });
       const text = (response.text ?? '').trim();
       if (!text) {
+        console.warn(`[STT] Empty text from ${attempt.model} (mime=${cleanMimeType}, b64len=${input.audioBase64.length})`);
         lastInfo = { status: 502, statusText: 'EMPTY_TRANSCRIPT', rawMessage: 'Empty transcript returned' };
+        continue;
+      }
+      if (
+        text.includes('첨부되어 있지 않') ||
+        text.includes('음성 파일을 함께') ||
+        text.includes('업로드해 주시면')
+      ) {
+        console.warn(`[STT] Rejected non-audio message from ${attempt.model} (mime=${cleanMimeType})`);
+        lastInfo = { status: 502, statusText: 'AUDIO_NOT_PARSED', rawMessage: 'Model did not parse audio inlineData' };
         continue;
       }
       return { transcript: text, model: attempt.model };
     } catch (err) {
       const info = inspectAiError(err);
+      console.warn(`[STT] Error from ${attempt.model} (mime=${cleanMimeType}): status=${info.status} ${info.statusText} ${info.rawMessage}`);
       lastInfo = info;
       if (info.status === 401 || info.status === 403) {
         throw toUserFriendlyAiError(info);
       }
-      // Allow fallback to PRIMARY_MODEL if TRANSCRIBE_MODEL returns 404 or retryable 503/429
-      if (info.status !== 404 && !isRetryableStatus(info)) {
+      // Allow fallback if model returns 404/400 (unsupported format/model) or retryable 503/429
+      if (info.status !== 404 && info.status !== 400 && !isRetryableStatus(info)) {
         throw toUserFriendlyAiError(info);
       }
     }

@@ -17,6 +17,7 @@ import { api, demoStore } from '../lib/api';
 import {
   blobToBase64,
   deleteVoiceAnswer,
+  encodeAudioBlobToWav,
   listVoiceAnswers,
   saveVoiceAnswer,
   type VoiceAnswer,
@@ -222,12 +223,28 @@ export function VoiceInterview({
     setTranscribingIds((prev) => ({ ...prev, [target.id]: true }));
     setError('');
     try {
-      const audioBase64 = await blobToBase64(target.audio);
+      const prepared = await encodeAudioBlobToWav(target.audio);
+      if (!prepared.hasAudioSignal && !target.transcript?.trim()) {
+        const updated: VoiceAnswer = {
+          ...target,
+          transcript: '(인식된 음성이 없습니다)',
+          transcribedAt: Date.now(),
+          sttEngine: 'gemini',
+        };
+        await saveVoiceAnswer(updated);
+        setAnswers((old) => old.map((a) => (a.id === updated.id ? updated : a)));
+        setNotice('녹음은 저장했지만 마이크에서 소리가 감지되지 않았어요. 마이크 입력을 확인해 주세요.');
+        return updated;
+      }
+
+      const audioBase64 = await blobToBase64(prepared.blob);
+      const rawMime = (prepared.blob.type || target.audio.type || 'audio/webm').split(';')[0].trim().toLowerCase();
+      const mimeType = rawMime === 'video/mp4' ? 'audio/mp4' : rawMime || 'audio/webm';
       const res = await api<{ transcript: string; model: string }>('/api/research/transcribe-audio', {
         method: 'POST',
         body: JSON.stringify({
           audioBase64,
-          mimeType: target.audio.type || 'audio/webm',
+          mimeType,
           question: target.question,
           personName: person.name,
         }),
@@ -235,13 +252,15 @@ export function VoiceInterview({
 
       const cleanText = res.transcript.trim();
       const emptySpeech = !cleanText || cleanText.includes('인식된 음성이 없습니다');
-      const shouldSync = Boolean(options.autoSyncToRecord && onSaveTranscript && !emptySpeech && !target.syncedToRecord);
+      const finalTranscript = emptySpeech && target.transcript?.trim() ? target.transcript.trim() : cleanText;
+      const finalIsEmpty = !finalTranscript || finalTranscript.includes('인식된 음성이 없습니다');
+      const shouldSync = Boolean(options.autoSyncToRecord && onSaveTranscript && !finalIsEmpty && !target.syncedToRecord);
 
       const updated: VoiceAnswer = {
         ...target,
-        transcript: cleanText,
+        transcript: finalTranscript,
         transcribedAt: Date.now(),
-        sttEngine: 'gemini',
+        sttEngine: emptySpeech && target.transcript?.trim() ? 'browser' : 'gemini',
         syncedToRecord: target.syncedToRecord || shouldSync,
       };
 
@@ -249,15 +268,36 @@ export function VoiceInterview({
       setAnswers((old) => old.map((a) => (a.id === updated.id ? updated : a)));
 
       if (shouldSync && onSaveTranscript) {
-        onSaveTranscript(person.id, formatRecordEntry(updated, cleanText));
+        onSaveTranscript(person.id, formatRecordEntry(updated, finalTranscript));
         setNotice(`음성을 텍스트로 변환하고 '${person.name}' 인터뷰 기록 공간에 자동으로 저장했어요.`);
-      } else if (emptySpeech) {
+      } else if (finalIsEmpty) {
         setNotice('녹음은 저장했지만 발화된 음성이 뚜렷하게 인식되지 않았어요.');
       } else {
         setNotice('음성을 텍스트로 변환해 저장했어요.');
       }
       return updated;
     } catch (err) {
+      const liveFallback = target.transcript?.trim();
+      if (liveFallback) {
+        const shouldSync = Boolean(options.autoSyncToRecord && onSaveTranscript && !target.syncedToRecord);
+        const updated: VoiceAnswer = {
+          ...target,
+          transcript: liveFallback,
+          transcribedAt: target.transcribedAt ?? Date.now(),
+          sttEngine: 'browser',
+          syncedToRecord: target.syncedToRecord || shouldSync,
+        };
+        await saveVoiceAnswer(updated).catch(() => {});
+        setAnswers((old) => old.map((a) => (a.id === updated.id ? updated : a)));
+        if (shouldSync && onSaveTranscript) {
+          onSaveTranscript(person.id, formatRecordEntry(updated, liveFallback));
+        }
+        setNotice(
+          `AI 정밀 변환이 일시 지연되어 실시간 음성 인식 초안으로 저장했어요. 아래 카드의 'AI 재변환'으로 다시 다듬을 수 있어요.`,
+        );
+        return updated;
+      }
+
       setError(
         err instanceof Error
           ? `STT 변환 오류: ${err.message}`
@@ -323,7 +363,9 @@ export function VoiceInterview({
         active.current = null;
         setConsent(false);
 
-        const audio = new Blob(chunks, { type: media.mimeType || chunks[0]?.type || 'audio/webm' });
+        const rawType = media.mimeType || chunks[0]?.type || 'audio/webm';
+        const normalizedType = rawType.startsWith('video/mp4') ? rawType.replace('video/mp4', 'audio/mp4') : rawType;
+        const audio = new Blob(chunks, { type: normalizedType });
         if (!audio.size) {
           setPhase('idle');
           setError('저장할 소리가 없어요. 마이크를 확인한 뒤 다시 녹음해 주세요.');

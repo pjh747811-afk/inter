@@ -131,3 +131,97 @@ export function blobToBase64(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+
+function writeAscii(view: DataView, offset: number, str: string) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
+}
+
+export async function encodeAudioBlobToWav(
+  blob: Blob,
+): Promise<{ blob: Blob; hasAudioSignal: boolean }> {
+  const AudioCtx =
+    typeof window !== 'undefined'
+      ? window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      : undefined;
+
+  if (!AudioCtx) {
+    return { blob, hasAudioSignal: true };
+  }
+
+  let ctx: AudioContext | null = null;
+  try {
+    const rawBuffer = await blob.arrayBuffer();
+    ctx = new AudioCtx();
+    const decoded = await ctx.decodeAudioData(rawBuffer.slice(0));
+
+    const numChannels = decoded.numberOfChannels || 1;
+    const srcLength = decoded.length;
+    if (!srcLength) {
+      return { blob, hasAudioSignal: false };
+    }
+
+    // Mix down to mono
+    const mono = new Float32Array(srcLength);
+    for (let ch = 0; ch < numChannels; ch++) {
+      const channelData = decoded.getChannelData(ch);
+      for (let i = 0; i < srcLength; i++) {
+        mono[i] += channelData[i] / numChannels;
+      }
+    }
+
+    // Measure peak amplitude
+    let peak = 0;
+    for (let i = 0; i < srcLength; i++) {
+      const abs = Math.abs(mono[i]);
+      if (abs > peak) peak = abs;
+    }
+
+    // Resample to 16kHz mono PCM for compact, universally supported WAV
+    const targetRate = 16000;
+    const srcRate = decoded.sampleRate || targetRate;
+    const targetLen = Math.max(1, Math.round((srcLength * targetRate) / srcRate));
+    const ratio = srcLength / targetLen;
+
+    const dataBytes = targetLen * 2;
+    const wavBuffer = new ArrayBuffer(44 + dataBytes);
+    const view = new DataView(wavBuffer);
+
+    writeAscii(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataBytes, true);
+    writeAscii(view, 8, 'WAVE');
+    writeAscii(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, targetRate, true);
+    view.setUint32(28, targetRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeAscii(view, 36, 'data');
+    view.setUint32(40, dataBytes, true);
+
+    for (let i = 0; i < targetLen; i++) {
+      const srcPos = i * ratio;
+      const idx0 = Math.min(srcLength - 1, Math.floor(srcPos));
+      const idx1 = Math.min(srcLength - 1, idx0 + 1);
+      const frac = srcPos - idx0;
+      const sample = mono[idx0] * (1 - frac) + mono[idx1] * frac;
+      const clamped = Math.max(-1, Math.min(1, sample));
+      view.setInt16(44 + i * 2, clamped < 0 ? Math.round(clamped * 0x8000) : Math.round(clamped * 0x7fff), true);
+    }
+
+    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+    if (wavBlob.size <= 17 * 1024 * 1024) {
+      return { blob: wavBlob, hasAudioSignal: peak >= 0.0015 };
+    }
+    return { blob, hasAudioSignal: peak >= 0.0015 };
+  } catch {
+    return { blob, hasAudioSignal: true };
+  } finally {
+    if (ctx) {
+      await ctx.close().catch(() => {});
+    }
+  }
+}
