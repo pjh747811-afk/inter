@@ -7,6 +7,7 @@ import {
   analyzeInterviewContent,
   analyzeInterviewSentimentTrend,
   analyzeSurveyData,
+  generateInsightReport,
   generateQuestionGuide,
   generateResearchTemplate,
   generateSurveyFromItem,
@@ -313,6 +314,55 @@ app.post('/api/research/summarize-text', async (req, res) => {
   } catch (error) {
     const status = error instanceof AiApiError ? error.status : 500;
     const message = error instanceof Error ? error.message : '텍스트 요약 중 오류가 발생했어요.';
+    res.status(status).json({ error: message });
+  }
+});
+
+// AI Insight Report: synthesize collected interviews and survey responses into actionable insights
+app.post('/api/research/generate-insight-report', async (req, res) => {
+  try {
+    const topic = String(req.body?.topic ?? '').trim().slice(0, 200);
+    const rawInterviews = Array.isArray(req.body?.interviews) ? req.body.interviews : [];
+    const rawSurveys = Array.isArray(req.body?.surveys) ? req.body.surveys : [];
+
+    const interviews = rawInterviews
+      .map((item: Record<string, unknown>, idx: number) => ({
+        speaker: String(item?.speaker ?? `대상자 ${idx + 1}`).trim().slice(0, 60),
+        group: item?.group ? String(item.group).trim().slice(0, 40) : undefined,
+        status: item?.status ? String(item.status).trim().slice(0, 40) : undefined,
+        alternative: item?.alternative ? String(item.alternative).trim().slice(0, 120) : undefined,
+        text: String(item?.text ?? '').trim().slice(0, 2500),
+      }))
+      .filter((i: { text: string }) => i.text.length >= 2)
+      .slice(0, 80);
+
+    const surveys = rawSurveys
+      .map((item: Record<string, unknown>, idx: number) => ({
+        title: String(item?.title ?? `설문 ${idx + 1}`).trim().slice(0, 120),
+        responseCount: Math.max(0, Math.round(Number(item?.responseCount) || 0)),
+        questionsSummary: String(item?.questionsSummary ?? '').trim().slice(0, 3500),
+        sampleResponses: Array.isArray(item?.sampleResponses)
+          ? item.sampleResponses
+              .map((r: unknown) => String(r ?? '').trim().slice(0, 500))
+              .filter(Boolean)
+              .slice(0, 40)
+          : [],
+      }))
+      .filter((s: { responseCount: number }) => s.responseCount > 0)
+      .slice(0, 20);
+
+    if (interviews.length === 0 && surveys.length === 0) {
+      res.status(400).json({
+        error: 'AI 인사이트 리포트를 생성하려면 수집된 인터뷰 기록이나 설문 응답이 최소 1건 이상 필요해요.',
+      });
+      return;
+    }
+
+    const report = await generateInsightReport({ topic: topic || undefined, interviews, surveys });
+    res.json(report);
+  } catch (error) {
+    const status = error instanceof AiApiError ? error.status : 500;
+    const message = error instanceof Error ? error.message : 'AI 인사이트 리포트 생성 중 오류가 발생했어요.';
     res.status(status).json({ error: message });
   }
 });

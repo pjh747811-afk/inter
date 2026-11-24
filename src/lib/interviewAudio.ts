@@ -75,6 +75,10 @@ export async function saveVoiceAnswer(answer: VoiceAnswer): Promise<void> {
       db.close();
       reject(tx.error);
     };
+    tx.onabort = () => {
+      db.close();
+      reject(tx.error ?? new Error('Save aborted'));
+    };
   });
 }
 
@@ -90,6 +94,10 @@ export async function deleteVoiceAnswer(id: string): Promise<void> {
     tx.onerror = () => {
       db.close();
       reject(tx.error);
+    };
+    tx.onabort = () => {
+      db.close();
+      reject(tx.error ?? new Error('Delete aborted'));
     };
   });
 }
@@ -111,6 +119,10 @@ export async function deletePersonAudio(personId: string): Promise<void> {
     tx.onerror = () => {
       db.close();
       reject(tx.error);
+    };
+    tx.onabort = () => {
+      db.close();
+      reject(tx.error ?? new Error('Delete aborted'));
     };
   });
 }

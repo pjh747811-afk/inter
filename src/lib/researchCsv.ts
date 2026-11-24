@@ -9,6 +9,7 @@ import type {
 } from './surveyAnalytics';
 import type { SentimentTrendOutput } from '../pages/InterviewSentimentPanel';
 import type { TextSummaryOutput } from '../pages/TextSummarizer';
+import type { InsightReportOutput } from '../pages/AiInsightReportPanel';
 import { download } from '../pages/ResearchUI';
 
 type CsvCell = string | number | boolean | null | undefined;
@@ -388,6 +389,7 @@ export function exportAllResearchBundleCsv(input: {
   interviewAnalysis: InterviewAnalysis | null;
   sentimentResults: SentimentTrendOutput[];
   textSummary: TextSummaryOutput | null;
+  insightReport?: InsightReportOutput | null;
   surveySummaries: SurveySummary[];
 }): string {
   const personById = new Map(input.people.map((p) => [p.id, p]));
@@ -487,7 +489,57 @@ export function exportAllResearchBundleCsv(input: {
     }
   }
 
+  if (input.insightReport) {
+    rows.push([]);
+    rows.push(['[섹션 7. AI 통합 인사이트 리포트]', input.insightReport.reportTitle, input.insightReport.dataCoverage]);
+    rows.push(['핵심 요약', input.insightReport.executiveSummary]);
+    rows.push(['인터뷰·설문 교차 분석', input.insightReport.interviewVsSurveyAlignment]);
+    input.insightReport.keyInsights.forEach((ki, i) =>
+      rows.push([`핵심 통찰 ${i + 1} (${ki.confidence})`, ki.title, ki.evidence, ki.implication]),
+    );
+    input.insightReport.painPoints.forEach((pp, i) => rows.push([`주요 페인포인트 ${i + 1}`, pp]));
+    input.insightReport.recommendedActions.forEach((act, i) =>
+      rows.push([`실행 제안 ${i + 1} (${act.priority})`, act.action, act.rationale]),
+    );
+  }
+
   const filename = `리서치랩-전체분석통합-${dateStamp()}.csv`;
+  download(rows, filename);
+  return filename;
+}
+
+export function exportInsightReportCsv(report: InsightReportOutput): string {
+  const rows: CsvRow[] = [
+    ['리포트 제목', report.reportTitle],
+    ['생성 일시', formatDateTime(report.generatedAt)],
+    ['분석 데이터 범위', report.dataCoverage],
+    ['핵심 요약', report.executiveSummary],
+    ['인터뷰·설문 교차 분석', report.interviewVsSurveyAlignment],
+    [],
+    ['구분', '항목 / 제목', '신뢰도 / 우선순위', '근거 · 특징', '시사점 · 실행 이유'],
+  ];
+
+  report.keyInsights.forEach((item, idx) => {
+    rows.push([`핵심 통찰 ${idx + 1}`, item.title, item.confidence, item.evidence, item.implication]);
+  });
+
+  report.painPoints.forEach((pain, idx) => {
+    rows.push([`페인포인트 ${idx + 1}`, pain, '', '', '']);
+  });
+
+  report.userSegments.forEach((seg, idx) => {
+    rows.push([`사용자 세그먼트 ${idx + 1}`, seg.segment, '', seg.characteristics, seg.opportunity]);
+  });
+
+  report.recommendedActions.forEach((act, idx) => {
+    rows.push([`실행 권장 액션 ${idx + 1}`, act.action, act.priority, '', act.rationale]);
+  });
+
+  report.openQuestions.forEach((q, idx) => {
+    rows.push([`추가 검증 질문 ${idx + 1}`, q, '', '', '']);
+  });
+
+  const filename = `AI인사이트리포트-${safeFileSlug(report.reportTitle, '요약')}-${dateStamp()}.csv`;
   download(rows, filename);
   return filename;
 }

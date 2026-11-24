@@ -40,6 +40,8 @@ export interface SyncPayload {
   interviewAnalysis?: unknown;
   sentimentTrend?: unknown;
   textSummary?: unknown;
+  insightReport?: unknown;
+  customTemplates?: unknown[];
   activeView?: string;
 }
 

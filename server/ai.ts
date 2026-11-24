@@ -1112,3 +1112,212 @@ export async function generateResearchTemplate(input: {
   };
 }
 
+export interface InsightReportOutput {
+  reportTitle: string;
+  executiveSummary: string;
+  dataCoverage: string;
+  keyInsights: Array<{
+    title: string;
+    evidence: string;
+    implication: string;
+    confidence: '높음' | '보통' | '추가 검증 필요';
+  }>;
+  interviewVsSurveyAlignment: string;
+  painPoints: string[];
+  userSegments: Array<{
+    segment: string;
+    characteristics: string;
+    opportunity: string;
+  }>;
+  recommendedActions: Array<{
+    priority: '즉시 실행' | '단기 검증' | '후속 탐색';
+    action: string;
+    rationale: string;
+  }>;
+  openQuestions: string[];
+  generatedAt: string;
+}
+
+export async function generateInsightReport(input: {
+  topic?: string;
+  interviews: Array<{
+    speaker: string;
+    group?: string;
+    status?: string;
+    alternative?: string;
+    text: string;
+  }>;
+  surveys: Array<{
+    title: string;
+    responseCount: number;
+    questionsSummary: string;
+    sampleResponses: string[];
+  }>;
+}): Promise<InsightReportOutput> {
+  const totalSurveyResponses = input.surveys.reduce((sum, s) => sum + s.responseCount, 0);
+
+  const interviewBlock = input.interviews.length
+    ? input.interviews
+        .slice(0, 60)
+        .map((item, idx) => {
+          const meta = [item.group, item.status, item.alternative ? `대안: ${item.alternative}` : '']
+            .filter(Boolean)
+            .join(' · ');
+          return `[인터뷰 #${idx + 1}] ${item.speaker}${meta ? ` (${meta})` : ''}\n${item.text.slice(0, 1800)}`;
+        })
+        .join('\n\n')
+    : '(수집된 인터뷰 기록 없음)';
+
+  const surveyBlock = input.surveys.length
+    ? input.surveys
+        .slice(0, 15)
+        .map((s, idx) => {
+          const samples = s.sampleResponses.length
+            ? s.sampleResponses.slice(0, 30).join('\n  - ')
+            : '(개별 응답 원문 없음)';
+          return [
+            `[설문 #${idx + 1}] ${s.title} (총 응답 ${s.responseCount}건)`,
+            `문항별 집계:\n${s.questionsSummary}`,
+            `수집 응답 샘플:\n  - ${samples}`,
+          ].join('\n');
+        })
+        .join('\n\n---\n\n')
+    : '(수집된 설문 데이터 없음)';
+
+  const prompt = [
+    '당신은 스타트업과 프로덕트 팀을 위해 정성 인터뷰 데이터와 정량/정성 설문 데이터를 교차 분석하여 의사결정용 인사이트 리포트를 작성하는 수석 UX 리서치 리드입니다.',
+    '아래 제공된 실제 수집 데이터만을 근거로 핵심 통찰을 요약하고, 구체적인 증거와 제품/비즈니스 실행 제안을 한국어로 정리하세요.',
+    '',
+    input.topic?.trim() ? `[리서치 주제 / 검증 목표]: ${input.topic.trim()}` : '',
+    `[수집 데이터 규모]: 인터뷰 기록 ${input.interviews.length}건, 설문조사 ${input.surveys.length}건 (총 응답 ${totalSurveyResponses}건)`,
+    '',
+    '=== 수집된 인터뷰 기록 (메모 · 음성 STT) ===',
+    interviewBlock,
+    '',
+    '=== 수집된 설문 데이터 (분포 · 응답 원문) ===',
+    surveyBlock,
+    '',
+    '작성 규칙:',
+    '- 제공된 데이터에 없는 수치, 인용, 사실을 절대 지어내지 마세요.',
+    '- reportTitle: 이번 리서치 핵심 발견을 압축한 명확한 리포트 제목 (45자 이내).',
+    '- executiveSummary: 경영진/팀원이 30초 만에 파악할 수 있는 3~4문장의 종합 결론.',
+    '- dataCoverage: 분석에 활용된 인터뷰 및 설문 데이터 규모와 범위를 1문장으로 서술.',
+    '- keyInsights: 가장 중요한 핵심 통찰 3~5가지. 각 항목의 evidence에는 실제 인터뷰 화자명·발화 맥락 또는 설문 문항 수치를 구체적으로 인용하고, implication에는 제품/기획 시사점을 적으세요. confidence는 "높음", "보통", "추가 검증 필요" 중 하나를 선택하세요.',
+    '- interviewVsSurveyAlignment: 인터뷰 정성 의견과 설문 데이터가 서로 뒷받침하거나 차이를 보이는 지점을 2~3문장으로 비교 분석하세요. (한쪽 데이터만 있는 경우 현재 단일 데이터 기준 해석과 보완 포인트를 명시하세요.)',
+    '- painPoints: 반복적으로 드러난 핵심 고객 불편/장애 요인 3~5가지.',
+    '- userSegments: 데이터에서 구분되는 주요 사용자 세그먼트/반응군 2~3개 (segment, characteristics, opportunity).',
+    '- recommendedActions: 팀이 바로 실행할 후속 액션 3~4가지 (priority는 "즉시 실행", "단기 검증", "후속 탐색" 중 하나, action, rationale).',
+    '- openQuestions: 현재 데이터만으로 결론 내리기 어렵거나 추가 검증이 필요한 열린 질문 2~3가지.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const parsed = await callGeminiJson<Omit<InsightReportOutput, 'generatedAt'>>({
+    contents: prompt,
+    parseFallbackMsg: 'AI 인사이트 리포트 생성 결과를 해석하지 못했어요. 다시 시도해 주세요.',
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        reportTitle: { type: Type.STRING },
+        executiveSummary: { type: Type.STRING },
+        dataCoverage: { type: Type.STRING },
+        keyInsights: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              evidence: { type: Type.STRING },
+              implication: { type: Type.STRING },
+              confidence: { type: Type.STRING, description: '높음, 보통, 추가 검증 필요 중 하나' },
+            },
+            required: ['title', 'evidence', 'implication', 'confidence'],
+          },
+        },
+        interviewVsSurveyAlignment: { type: Type.STRING },
+        painPoints: { type: Type.ARRAY, items: { type: Type.STRING } },
+        userSegments: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              segment: { type: Type.STRING },
+              characteristics: { type: Type.STRING },
+              opportunity: { type: Type.STRING },
+            },
+            required: ['segment', 'characteristics', 'opportunity'],
+          },
+        },
+        recommendedActions: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              priority: { type: Type.STRING, description: '즉시 실행, 단기 검증, 후속 탐색 중 하나' },
+              action: { type: Type.STRING },
+              rationale: { type: Type.STRING },
+            },
+            required: ['priority', 'action', 'rationale'],
+          },
+        },
+        openQuestions: { type: Type.ARRAY, items: { type: Type.STRING } },
+      },
+      required: [
+        'reportTitle',
+        'executiveSummary',
+        'dataCoverage',
+        'keyInsights',
+        'interviewVsSurveyAlignment',
+        'painPoints',
+        'userSegments',
+        'recommendedActions',
+        'openQuestions',
+      ],
+    },
+  });
+
+  return {
+    reportTitle: String(parsed.reportTitle ?? '').trim() || '고객 리서치 통합 인사이트 리포트',
+    executiveSummary: String(parsed.executiveSummary ?? '').trim(),
+    dataCoverage:
+      String(parsed.dataCoverage ?? '').trim() ||
+      `인터뷰 기록 ${input.interviews.length}건, 설문 ${input.surveys.length}건(응답 ${totalSurveyResponses}건) 기반 분석`,
+    keyInsights: (Array.isArray(parsed.keyInsights) ? parsed.keyInsights : [])
+      .filter((k) => k && typeof k.title === 'string' && k.title.trim())
+      .slice(0, 6)
+      .map((k) => ({
+        title: k.title.trim(),
+        evidence: String(k.evidence ?? '').trim(),
+        implication: String(k.implication ?? '').trim(),
+        confidence:
+          k.confidence === '높음' || k.confidence === '보통' || k.confidence === '추가 검증 필요'
+            ? k.confidence
+            : '보통',
+      })),
+    interviewVsSurveyAlignment: String(parsed.interviewVsSurveyAlignment ?? '').trim(),
+    painPoints: (parsed.painPoints ?? []).map((p) => String(p).trim()).filter(Boolean).slice(0, 6),
+    userSegments: (Array.isArray(parsed.userSegments) ? parsed.userSegments : [])
+      .filter((s) => s && typeof s.segment === 'string' && s.segment.trim())
+      .slice(0, 4)
+      .map((s) => ({
+        segment: s.segment.trim(),
+        characteristics: String(s.characteristics ?? '').trim(),
+        opportunity: String(s.opportunity ?? '').trim(),
+      })),
+    recommendedActions: (Array.isArray(parsed.recommendedActions) ? parsed.recommendedActions : [])
+      .filter((a) => a && typeof a.action === 'string' && a.action.trim())
+      .slice(0, 5)
+      .map((a) => ({
+        priority:
+          a.priority === '즉시 실행' || a.priority === '단기 검증' || a.priority === '후속 탐색'
+            ? a.priority
+            : '단기 검증',
+        action: a.action.trim(),
+        rationale: String(a.rationale ?? '').trim(),
+      })),
+    openQuestions: (parsed.openQuestions ?? []).map((q) => String(q).trim()).filter(Boolean).slice(0, 4),
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+

@@ -79,12 +79,13 @@ export function VoiceInterview({
   const [draft, setDraft] = useState<VoiceAnswer | null>(null);
   const [busy, setBusy] = useState(false);
   const [transcribingIds, setTranscribingIds] = useState<Record<string, boolean>>({});
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
   const [editingId, setEditingId] = useState('');
   const [editingText, setEditingText] = useState('');
   const [copiedId, setCopiedId] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [confirm, setConfirm] = useState<'close' | 'draft' | VoiceAnswer | null>(null);
+  const [confirm, setConfirm] = useState<'close' | null>(null);
 
   const active = useRef<MediaRecorder | null>(null);
   const liveSpeechRef = useRef<LiveSpeechController | null>(null);
@@ -267,6 +268,7 @@ export function VoiceInterview({
 
       await saveVoiceAnswer(updated);
       setAnswers((old) => old.map((a) => (a.id === updated.id ? updated : a)));
+      window.dispatchEvent(new CustomEvent('research-voice-updated'));
 
       if (shouldSync && onSaveTranscript) {
         onSaveTranscript(person.id, formatRecordEntry(updated, finalTranscript));
@@ -390,6 +392,7 @@ export function VoiceInterview({
             try {
               await saveVoiceAnswer(newAnswer);
               setAnswers((old) => [newAnswer, ...old]);
+              window.dispatchEvent(new CustomEvent('research-voice-updated'));
               setNotice('녹음을 저장했어요. AI로 음성을 텍스트(STT) 변환하고 있어요…');
               await transcribeAndUpdate(newAnswer, { autoSyncToRecord: true });
             } catch {
@@ -458,6 +461,7 @@ export function VoiceInterview({
       await saveVoiceAnswer(draft);
       const savedItem = draft;
       setAnswers((old) => [savedItem, ...old]);
+      window.dispatchEvent(new CustomEvent('research-voice-updated'));
       setDraft(null);
       await transcribeAndUpdate(savedItem, { autoSyncToRecord: Boolean(onSaveTranscript) });
     } catch {
@@ -487,8 +491,32 @@ export function VoiceInterview({
     };
     await saveVoiceAnswer(updated);
     setAnswers((old) => old.map((a) => (a.id === updated.id ? updated : a)));
+    window.dispatchEvent(new CustomEvent('research-voice-updated'));
     setEditingId('');
     setNotice('변환된 텍스트를 수정해 저장했어요.');
+  }
+
+  async function removeVoiceAnswerNow(target: VoiceAnswer) {
+    if (deletingIds[target.id]) return;
+    setDeletingIds((prev) => ({ ...prev, [target.id]: true }));
+    setError('');
+    try {
+      await deleteVoiceAnswer(target.id);
+      setAnswers((old) => old.filter((a) => a.id !== target.id));
+      if (editingId === target.id) {
+        setEditingId('');
+      }
+      window.dispatchEvent(new CustomEvent('research-voice-updated'));
+      setNotice('녹음된 음성 파일을 삭제했어요.');
+    } catch {
+      setError('녹음을 삭제하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+    } finally {
+      setDeletingIds((prev) => {
+        const next = { ...prev };
+        delete next[target.id];
+        return next;
+      });
+    }
   }
 
   async function copyTranscript(id: string, text: string) {
@@ -501,30 +529,9 @@ export function VoiceInterview({
     }
   }
 
-  async function accept() {
+  function accept() {
     if (confirm === 'close') {
       close();
-      return;
-    }
-    if (confirm === 'draft') {
-      setDraft(null);
-      setConfirm(null);
-      setError('');
-      setNotice('저장하지 않은 녹음을 버렸어요.');
-      return;
-    }
-    if (!confirm) return;
-    setBusy(true);
-    setError('');
-    try {
-      await deleteVoiceAnswer(confirm.id);
-      setAnswers((old) => old.filter((a) => a.id !== confirm.id));
-      setConfirm(null);
-      setNotice('음성 답변을 삭제했어요.');
-    } catch {
-      setError('녹음을 삭제하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -557,11 +564,9 @@ export function VoiceInterview({
         </div>
 
         {confirm && (
-          <section className="grid gap-2 rounded-xl border border-[#f2d0d9] bg-[#fff5f7] p-3.5" aria-label="녹음 삭제 확인">
-            <b className="text-sm text-[#22213a]">
-              {confirm === 'close' ? '저장하지 않고 닫을까요?' : confirm === 'draft' ? '이 녹음을 버릴까요?' : '저장한 답변을 삭제할까요?'}
-            </b>
-            <p className="text-[13px] text-[#62627a]">이 녹음은 다시 불러올 수 없어요.</p>
+          <section className="grid gap-2 rounded-xl border border-[#f2d0d9] bg-[#fff5f7] p-3.5" aria-label="닫기 확인">
+            <b className="text-sm text-[#22213a]">저장하지 않고 닫을까요?</b>
+            <p className="text-[13px] text-[#62627a]">현재 녹음 중인 내용은 저장되지 않아요.</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -574,10 +579,10 @@ export function VoiceInterview({
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => void accept()}
+                onClick={accept}
                 className="min-h-9 rounded-lg bg-[#a6214e] px-3 text-xs font-semibold text-white"
               >
-                {confirm === 'close' ? '저장하지 않고 닫기' : confirm === 'draft' ? '녹음 버리기' : '음성 답변 삭제'}
+                저장하지 않고 닫기
               </button>
             </div>
           </section>
@@ -799,8 +804,12 @@ export function VoiceInterview({
                 </button>
                 <button
                   type="button"
-                  disabled={busy || !!confirm}
-                  onClick={() => setConfirm('draft')}
+                  disabled={busy}
+                  onClick={() => {
+                    setDraft(null);
+                    setError('');
+                    setNotice('저장하지 않은 녹음을 버렸어요.');
+                  }}
                   className="min-h-10 px-2 text-sm font-semibold text-[#a6214e] hover:underline"
                 >
                   녹음 버리기
@@ -849,6 +858,7 @@ export function VoiceInterview({
             <ul className="grid gap-2.5">
               {answers.map((a) => {
                 const isTranscribing = Boolean(transcribingIds[a.id]);
+                const isDeleting = Boolean(deletingIds[a.id]);
                 const isEditing = editingId === a.id;
                 return (
                   <li key={a.id} className="grid gap-2.5 rounded-xl border border-[#e9e7f1] bg-white p-3.5">
@@ -881,19 +891,22 @@ export function VoiceInterview({
                         <button
                           type="button"
                           aria-label={`${a.question} 녹음 내려받기`}
+                          disabled={isDeleting}
                           onClick={() => downloadAnswer(a)}
-                          className="grid size-8 place-items-center rounded-lg text-[#62627a] hover:bg-[#f1edff] hover:text-[#4d30cf]"
+                          className="inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 text-xs font-semibold text-[#62627a] hover:bg-[#f1edff] hover:text-[#4d30cf] disabled:opacity-45"
                         >
-                          <Download size={16} aria-hidden="true" />
+                          <Download size={14} aria-hidden="true" />
+                          <span className="hidden sm:inline">내려받기</span>
                         </button>
                         <button
                           type="button"
                           aria-label={`${a.question} 녹음 삭제`}
-                          disabled={busy || !!confirm || recorderInUse || isTranscribing}
-                          onClick={() => setConfirm(a)}
-                          className="grid size-8 place-items-center rounded-lg text-[#62627a] hover:bg-[#fff0f3] hover:text-[#a6214e]"
+                          disabled={isTranscribing || isDeleting}
+                          onClick={() => void removeVoiceAnswerNow(a)}
+                          className="inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 text-xs font-semibold text-[#9f233f] hover:bg-[#fff0f3] disabled:opacity-45"
                         >
-                          <Trash2 size={16} aria-hidden="true" />
+                          <Trash2 size={14} aria-hidden="true" />
+                          <span>{isDeleting ? '삭제 중…' : '삭제'}</span>
                         </button>
                       </div>
                     </div>

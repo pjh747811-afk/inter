@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { demoStore } from '../lib/api';
 import { groups, interviewPrompts, statuses, type Person } from '../lib/research';
-import { deletePersonAudio, listAllVoiceAnswers } from '../lib/interviewAudio';
+import { deletePersonAudio, listAllVoiceAnswers, type VoiceAnswer } from '../lib/interviewAudio';
 import {
   interviewAnalysisKey,
   questionGuideKey,
@@ -48,6 +48,7 @@ import { VoiceInterview } from './VoiceInterview';
 import { QuestionGenerator } from './QuestionGenerator';
 import { InterviewSentimentPanel, type SentimentTrendOutput } from './InterviewSentimentPanel';
 import { TextSummarizer, type TextSummaryOutput } from './TextSummarizer';
+import { AiInsightReportPanel, insightReportKey, type InsightReportOutput } from './AiInsightReportPanel';
 import { DeviceSyncModal } from './DeviceSyncModal';
 
 const peopleStore = 'research.people.v1';
@@ -107,6 +108,9 @@ export default function Home() {
   const [summaryModal, setSummaryModal] = useState<{ title: string; text: string } | null>(null);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [hoveredPersonId, setHoveredPersonId] = useState<string | null>(null);
+  const [mobilePreviewId, setMobilePreviewId] = useState<string | null>(null);
+  const [voiceByPerson, setVoiceByPerson] = useState<Record<string, VoiceAnswer[]>>({});
   const [page, setPage] = useState(1);
   const surveyState = useSurveys();
 
@@ -122,19 +126,44 @@ export default function Home() {
   });
 
   useEffect(() => {
+    let active = true;
+    const loadVoiceMap = () => {
+      void listAllVoiceAnswers()
+        .then((rows) => {
+          if (!active) return;
+          const grouped: Record<string, VoiceAnswer[]> = {};
+          for (const row of rows) {
+            if (!grouped[row.personId]) grouped[row.personId] = [];
+            grouped[row.personId].push(row);
+          }
+          setVoiceByPerson(grouped);
+        })
+        .catch(() => {});
+    };
+    loadVoiceMap();
+
     const onSync = () => {
       setPeople(demoStore.get(peopleStore, samples));
+      loadVoiceMap();
     };
+    window.addEventListener('research-voice-updated', loadVoiceMap);
     window.addEventListener('research-sync-applied', onSync);
     window.addEventListener('storage', onSync);
     return () => {
+      active = false;
+      window.removeEventListener('research-voice-updated', loadVoiceMap);
       window.removeEventListener('research-sync-applied', onSync);
       window.removeEventListener('storage', onSync);
     };
   }, []);
 
   useEffect(() => {
-    if (section.id === 'home' || section.id === 'surveys' || section.id === 'analytics') {
+    if (
+      section.id === 'home' ||
+      section.id === 'surveys' ||
+      section.id === 'analytics' ||
+      section.id === 'insights'
+    ) {
       surveyState.reload(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,6 +225,7 @@ export default function Home() {
     );
     const sentimentResults = Object.values(sentimentCache).map((item) => item.result);
     const textSummary = demoStore.get<TextSummaryOutput | null>('research.text-summary.v1', null);
+    const insightReport = demoStore.get<InsightReportOutput | null>(insightReportKey, null);
     const surveySummaries = Object.values(surveyState.summaries);
 
     const file = exportAllResearchBundleCsv({
@@ -205,6 +235,7 @@ export default function Home() {
       interviewAnalysis,
       sentimentResults,
       textSummary,
+      insightReport,
       surveySummaries,
     });
     setNotice(`리서치·수집 인터뷰·분석 데이터 통합 CSV(${file})를 다운로드했어요.`);
@@ -491,7 +522,7 @@ export default function Home() {
 
           {(section.id === 'home' || section.id === 'people') && (
             <div className={`grid items-start gap-4 ${section.id === 'people' ? 'grid-cols-1' : 'xl:grid-cols-[minmax(0,1fr)_270px]'}`}>
-              <section className="min-w-0 overflow-hidden rounded-2xl border border-[#e9e7f1] bg-white">
+              <section className="min-w-0 rounded-2xl border border-[#e9e7f1] bg-white">
                 <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                   <div>
                     {section.id === 'people' ? (
@@ -583,6 +614,21 @@ export default function Home() {
                 <div className="divide-y divide-[#efedf5] border-t border-[#efedf5] md:hidden" role="region" aria-label="모바일 대상자 목록">
                   {paginated.map((p, i) => {
                     const globalIdx = (currentPage - 1) * PAGE_SIZE + i;
+                    const isCompleted = p.status === '완료';
+                    const personVoices = (voiceByPerson[p.id] ?? []).filter(
+                      (v) => v.transcript?.trim() && !v.transcript.includes('인식된 음성이 없습니다'),
+                    );
+                    const noteText = p.note.trim();
+                    const extraVoices = personVoices.filter(
+                      (v) => !noteText.includes((v.transcript?.trim() ?? '').slice(0, 28)),
+                    );
+                    const fullResultText = [
+                      noteText,
+                      ...extraVoices.map((v) => `Q. ${v.question}\nA. ${v.transcript?.trim() ?? ''}`),
+                    ]
+                      .filter(Boolean)
+                      .join('\n\n');
+                    const expanded = mobilePreviewId === p.id;
                     const statusStyle =
                       p.status === '완료'
                         ? 'text-[#14674d]'
@@ -603,7 +649,17 @@ export default function Home() {
                             </span>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 text-sm">
-                                <b className="truncate font-bold text-[#22213a]">{p.name}</b>
+                                {isCompleted ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setMobilePreviewId((curr) => (curr === p.id ? null : p.id))}
+                                    className="truncate text-left font-bold text-[#22213a] underline decoration-[#cfc1f3] decoration-dashed underline-offset-4"
+                                  >
+                                    {p.name}
+                                  </button>
+                                ) : (
+                                  <b className="truncate font-bold text-[#22213a]">{p.name}</b>
+                                )}
                                 {p.sample && <span className="shrink-0 text-[11px] text-[#62627a]">· 예시</span>}
                               </div>
                               <p className="truncate text-xs text-[#62627a]">{p.desc || '특징 미입력'}</p>
@@ -628,10 +684,22 @@ export default function Home() {
                           )}
                         </div>
 
-                        {p.note && (
-                          <p className="line-clamp-2 rounded-lg bg-[#faf9fd] px-2.5 py-2 text-xs text-[#22213a]">
-                            {p.note}
-                          </p>
+                        {isCompleted && expanded ? (
+                          <div className="grid gap-1.5 rounded-xl border border-[#d8cef7] bg-[#faf7ff] p-3 text-xs">
+                            <b className="font-bold text-[#4d30cf]">{p.name} 인터뷰 결과</b>
+                            <p className="whitespace-pre-wrap leading-relaxed text-[#22213a]">
+                              {fullResultText || '아직 기록된 인터뷰 결과가 없어요. 아래 상세 편집이나 음성 녹음으로 내용을 기록해 보세요.'}
+                            </p>
+                            {p.alternative && (
+                              <span className="text-[11px] text-[#62627a]">현재 대안: {p.alternative}</span>
+                            )}
+                          </div>
+                        ) : (
+                          p.note && (
+                            <p className="line-clamp-2 rounded-lg bg-[#faf9fd] px-2.5 py-2 text-xs text-[#22213a]">
+                              {p.note}
+                            </p>
+                          )
                         )}
 
                         <div className="flex items-center gap-2 pt-0.5">
@@ -661,7 +729,7 @@ export default function Home() {
                 </div>
 
                 {/* Desktop Table (>= md) */}
-                <div className="hidden overflow-x-auto md:block" role="region" aria-label="대상자 목록" tabIndex={0}>
+                <div className="hidden overflow-x-auto md:block md:overflow-visible" role="region" aria-label="대상자 목록" tabIndex={0}>
                   <table className="w-full min-w-[640px] border-collapse text-left text-[13px] tnum">
                     <thead>
                       <tr className="border-t border-[#efedf5] bg-[#f8f8fc] text-xs font-semibold text-[#565771]">
@@ -688,6 +756,22 @@ export default function Home() {
                     <tbody className="divide-y divide-[#efedf5]">
                       {paginated.map((p, i) => {
                         const globalIdx = (currentPage - 1) * PAGE_SIZE + i;
+                        const isCompleted = p.status === '완료';
+                        const personVoices = (voiceByPerson[p.id] ?? []).filter(
+                          (v) => v.transcript?.trim() && !v.transcript.includes('인식된 음성이 없습니다'),
+                        );
+                        const noteText = p.note.trim();
+                        const extraVoices = personVoices.filter(
+                          (v) => !noteText.includes((v.transcript?.trim() ?? '').slice(0, 28)),
+                        );
+                        const fullResultText = [
+                          noteText,
+                          ...extraVoices.map((v) => `Q. ${v.question}\nA. ${v.transcript?.trim() ?? ''}`),
+                        ]
+                          .filter(Boolean)
+                          .join('\n\n');
+                        const openUpward = paginated.length >= 4 && i >= paginated.length - 2;
+                        const showPopover = isCompleted && hoveredPersonId === p.id;
                         const statusStyle =
                           p.status === '완료'
                             ? 'text-[#14674d]'
@@ -708,7 +792,68 @@ export default function Home() {
                                 </span>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1.5">
-                                    <b className="font-semibold text-[#22213a]">{p.name}</b>
+                                    {isCompleted ? (
+                                      <span
+                                        className="relative inline-flex items-center"
+                                        onMouseEnter={() => setHoveredPersonId(p.id)}
+                                        onMouseLeave={() =>
+                                          setHoveredPersonId((curr) => (curr === p.id ? null : curr))
+                                        }
+                                      >
+                                        <button
+                                          type="button"
+                                          aria-label={`${p.name} 인터뷰 결과 미리보기 및 편집`}
+                                          onFocus={() => setHoveredPersonId(p.id)}
+                                          onBlur={() =>
+                                            setHoveredPersonId((curr) => (curr === p.id ? null : curr))
+                                          }
+                                          onClick={() => setEditing(p)}
+                                          className="cursor-pointer text-left font-semibold text-[#22213a] underline decoration-[#cfc1f3] decoration-dashed underline-offset-4 hover:text-[#4d30cf]"
+                                        >
+                                          {p.name}
+                                        </button>
+
+                                        {showPopover && (
+                                          <div
+                                            role="tooltip"
+                                            className={`absolute left-0 z-40 w-80 max-w-[calc(100vw-48px)] ${
+                                              openUpward ? 'bottom-full pb-2' : 'top-full pt-2'
+                                            }`}
+                                          >
+                                            <div className="rounded-xl border border-[#d6c9fa] bg-white p-3.5 text-left shadow-xl">
+                                              <div className="flex items-center justify-between gap-2 border-b border-[#efedf6] pb-2">
+                                                <b className="text-xs font-bold text-[#22213a]">{p.name} 인터뷰 결과</b>
+                                                <span className="text-[11px] font-semibold text-[#14674d]">
+                                                  완료 · {p.group}
+                                                </span>
+                                              </div>
+                                              <div className="mt-2 max-h-52 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-[#22213a]">
+                                                {fullResultText ||
+                                                  '기록된 인터뷰 결과가 아직 없어요. 이름을 클릭해 핵심 인사이트를 남기거나 음성 녹음을 진행해 보세요.'}
+                                              </div>
+                                              {(p.alternative || personVoices.length > 0 || p.date) && (
+                                                <div className="tnum mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#efedf6] pt-2 text-[11px] text-[#62627a]">
+                                                  {p.alternative && <span>현재 대안: {p.alternative}</span>}
+                                                  {personVoices.length > 0 && (
+                                                    <span>
+                                                      {p.alternative ? '· ' : ''}음성 STT {personVoices.length}건
+                                                    </span>
+                                                  )}
+                                                  {p.date && (
+                                                    <span>
+                                                      {p.alternative || personVoices.length > 0 ? '· ' : ''}
+                                                      {p.date.replace('T', ' ')}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </span>
+                                    ) : (
+                                      <b className="font-semibold text-[#22213a]">{p.name}</b>
+                                    )}
                                     {p.sample && <span className="text-[11px] text-[#62627a]">· 예시</span>}
                                   </div>
                                   <span className="block truncate text-xs text-[#62627a]">{p.desc || '—'}</span>
@@ -899,6 +1044,11 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+
+              <AiInsightReportPanel
+                people={people}
+                surveySummaries={Object.values(surveyState.summaries)}
+              />
 
               <InterviewSentimentPanel people={people} />
 

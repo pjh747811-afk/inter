@@ -11,6 +11,7 @@ export interface SyncPayload {
   interviewAnalysis?: unknown;
   sentimentTrend?: unknown;
   textSummary?: unknown;
+  insightReport?: unknown;
   customTemplates?: unknown[];
   activeView?: string;
 }
@@ -45,6 +46,7 @@ const SYNC_KEY_MAP = [
   { lsKey: 'research.interview-analysis.v1', field: 'interviewAnalysis' },
   { lsKey: 'research.sentiment-trend.v1', field: 'sentimentTrend' },
   { lsKey: 'research.text-summary.v1', field: 'textSummary' },
+  { lsKey: 'research.insight-report.v1', field: 'insightReport' },
   { lsKey: 'research.custom-templates.v1', field: 'customTemplates' },
 ] as const;
 
