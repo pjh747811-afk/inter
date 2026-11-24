@@ -147,14 +147,23 @@ app.post('/api/research/question-guide', async (req, res) => {
   try {
     const item = String(req.body?.item ?? '').trim().slice(0, 300);
     const audience = String(req.body?.audience ?? '').trim().slice(0, 200);
+    const customerArchetype = String(req.body?.customerArchetype ?? '').trim().slice(0, 100);
     const hypothesis = String(req.body?.hypothesis ?? '').trim().slice(0, 350);
+    const valueProposition = String(req.body?.valueProposition ?? '').trim().slice(0, 300);
     const draftQuestions = String(req.body?.draftQuestions ?? '').trim().slice(0, 2000);
 
     if (item.length < 3) {
       res.status(400).json({ error: '검증할 아이템을 3자 이상 입력해 주세요.' });
       return;
     }
-    const guide = await generateQuestionGuide({ item, audience, hypothesis, draftQuestions });
+    const guide = await generateQuestionGuide({
+      item,
+      audience,
+      customerArchetype,
+      hypothesis,
+      valueProposition,
+      draftQuestions,
+    });
     res.json(guide);
   } catch (error) {
     const status = error instanceof AiApiError ? error.status : 500;
@@ -217,6 +226,13 @@ app.post('/api/research/generate-template', async (req, res) => {
     const purpose = String(req.body?.purpose ?? '').trim().slice(0, 500);
     const audience = String(req.body?.audience ?? '').trim().slice(0, 200);
     const context = String(req.body?.context ?? '').trim().slice(0, 500);
+    const customerArchetype = String(req.body?.customerArchetype ?? '').trim().slice(0, 100);
+    const hypothesis = String(req.body?.hypothesis ?? '').trim().slice(0, 350);
+    const rawStage = req.body?.validationStage;
+    const validationStage =
+      rawStage === '고객검증' || rawStage === '문제검증' || rawStage === '솔루션검증'
+        ? rawStage
+        : undefined;
     const rawFocus = req.body?.focus;
     const focus = rawFocus === 'interview' || rawFocus === 'survey' ? rawFocus : 'both';
     const count = Math.max(4, Math.min(10, Math.round(Number(req.body?.count) || 6)));
@@ -230,6 +246,9 @@ app.post('/api/research/generate-template', async (req, res) => {
       purpose,
       audience: audience || undefined,
       context: context || undefined,
+      customerArchetype: customerArchetype || undefined,
+      validationStage,
+      hypothesis: hypothesis || undefined,
       focus,
       count,
     });

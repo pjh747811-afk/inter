@@ -35,28 +35,28 @@ import {
   type ExtractedKeyword,
   type TimelinePoint,
 } from '../lib/surveyAnalytics';
-import { saveBlob } from './ResearchUI';
+import { saasUi, saveBlob } from './ResearchUI';
 import type { useSurveys } from './Surveys';
 
 const base = '/api/research';
-const CHART_PALETTE = ['#5b3df5', '#4a7fd9', '#1f8a65', '#d97724', '#a6214e', '#7c65f6', '#2b8a88'];
+const CHART_PALETTE = ['#4c2ee6', '#356bc9', '#19825f', '#d97724', '#b01e4a', '#745cf0', '#238280'];
 
 function sentimentColor(sentiment: ExtractedKeyword['sentiment']): string {
-  if (sentiment === '긍정') return '#1f8a65';
-  if (sentiment === '개선요청') return '#a6214e';
-  return '#5b3df5';
+  if (sentiment === '긍정') return '#19825f';
+  if (sentiment === '개선요청') return '#b01e4a';
+  return '#4c2ee6';
 }
 
 function sentimentSoftBg(sentiment: ExtractedKeyword['sentiment']): string {
   if (sentiment === '긍정') return '#e6f7ef';
   if (sentiment === '개선요청') return '#fff0f3';
-  return '#eee8ff';
+  return '#efeaff';
 }
 
 function sentimentText(sentiment: ExtractedKeyword['sentiment']): string {
   if (sentiment === '긍정') return '#14674d';
-  if (sentiment === '개선요청') return '#9a2148';
-  return '#4d30cf';
+  if (sentiment === '개선요청') return '#9f1d45';
+  return '#4125cc';
 }
 
 function useContainerWidth(ref: React.RefObject<HTMLDivElement | null>, fallback = 480): number {
@@ -89,7 +89,7 @@ function highlightMatch(text: string, keyword: string) {
   const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
   return parts.map((part, idx) =>
     part.toLowerCase() === keyword.toLowerCase() ? (
-      <mark key={idx} className="rounded bg-[#eee8ff] px-0.5 font-semibold text-[#4d30cf]">
+      <mark key={idx} className="rounded bg-[#efeaff] px-1 font-semibold text-[#4125cc]">
         {part}
       </mark>
     ) : (
@@ -280,27 +280,27 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
 
   if (!state.keys.length) {
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-5">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-[#22213a]">설문 데이터 분석 대시보드</h1>
-          <p className="mt-1 text-[13px] text-[#62627a]">
+          <h1 className={saasUi.pageTitle}>설문 데이터 분석 대시보드</h1>
+          <p className={saasUi.pageSubtitle}>
             수집된 설문 응답 분포, 시간별 추이, 추출 키워드를 D3 차트로 시각화해요.
           </p>
         </div>
 
-        <section className="grid justify-items-center gap-3 rounded-2xl border border-[#e9e7f1] bg-white px-6 py-12 text-center">
-          <span className="grid size-12 place-items-center rounded-xl bg-[#eee8ff] text-[#5b3df5]">
-            <BarChart3 size={24} aria-hidden="true" />
+        <section className={`${saasUi.card} grid justify-items-center gap-3 px-6 py-12 text-center`}>
+          <span className="grid size-13 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+            <BarChart3 size={25} aria-hidden="true" />
           </span>
-          <h2 className="text-lg font-bold text-[#22213a]">분석할 설문이 아직 없어요</h2>
-          <p className="max-w-md text-sm text-[#62627a]">
+          <h2 className="text-[20px] font-bold text-[#17162b]">분석할 설문이 아직 없어요</h2>
+          <p className="max-w-md text-[15px] leading-relaxed text-[#565570]">
             먼저 설문 탭에서 검증할 아이템으로 설문을 생성하고 배포 링크로 응답을 수집하면, 이 대시보드에서 D3 차트로 바로 분석할 수 있어요.
           </p>
           <Link
             to="/?view=surveys&new=1"
-            className="mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
+            className={`${saasUi.btnPrimary} mt-2`}
           >
-            <Plus size={16} aria-hidden="true" /> 아이템으로 첫 설문 만들기
+            <Plus size={17} aria-hidden="true" /> 아이템으로 첫 설문 만들기
           </Link>
         </section>
       </div>
@@ -308,24 +308,24 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-6">
       {/* Header & Controls */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-[#22213a]">설문 데이터 분석 대시보드</h1>
-          <p className="mt-1 text-[13px] text-[#62627a]">
+          <h1 className={saasUi.pageTitle}>설문 데이터 분석 대시보드</h1>
+          <p className={saasUi.pageSubtitle}>
             수집된 응답 분포·추이·추출 키워드를 D3 차트로 확인하고, 키워드별로 실제 답변을 필터링해요.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 text-xs font-semibold text-[#62627a]">
+          <label className="flex items-center gap-2 text-[14px] font-semibold text-[#565570]">
             <span className="sr-only">분석할 설문 선택</span>
             <select
               aria-label="분석할 설문 선택"
               value={selectedKey?.id ?? ''}
               onChange={(e) => selectSurvey(e.target.value)}
-              className="min-h-10 max-w-[280px] rounded-lg border border-[#dfdce9] bg-white px-3 text-sm font-semibold text-[#22213a] focus:border-[#5b3df5]"
+              className="min-h-11 max-w-[300px] rounded-xl border border-[#dcd8e8] bg-white px-3.5 text-[15px] font-semibold text-[#17162b] hover:border-[#b9b1d4] focus:border-[#4c2ee6] focus:outline-none"
             >
               {state.keys.map((k) => {
                 const s = state.summaries[k.id];
@@ -342,9 +342,9 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
             type="button"
             disabled={state.loading}
             onClick={() => state.reload()}
-            className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
+            className={saasUi.btnCompactSecondary}
           >
-            <RefreshCw size={14} aria-hidden="true" /> 새로고침
+            <RefreshCw size={15} aria-hidden="true" /> 새로고침
           </button>
 
           {selectedKey && (
@@ -352,26 +352,26 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
               <button
                 type="button"
                 onClick={() => void copySurveyLink(selectedKey)}
-                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#f5f1ff]"
+                className={saasUi.btnCompactSoft}
               >
-                {copiedId === selectedKey.id ? <Check size={14} aria-hidden="true" /> : <Link2 size={14} aria-hidden="true" />}
+                {copiedId === selectedKey.id ? <Check size={15} aria-hidden="true" /> : <Link2 size={15} aria-hidden="true" />}
                 {copiedId === selectedKey.id ? '복사됨' : '링크 복사'}
               </button>
               <a
                 href={`/survey/${selectedKey.id}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-10 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                className={saasUi.btnCompactSecondary}
               >
-                응답 화면 <ArrowUpRight size={14} aria-hidden="true" />
+                응답 화면 <ArrowUpRight size={15} aria-hidden="true" />
               </a>
               <button
                 type="button"
                 disabled={!summary || summary.count === 0 || csvBusy}
                 onClick={() => void exportCsv(selectedKey)}
-                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                className={saasUi.btnCompactSecondary}
               >
-                <Download size={14} aria-hidden="true" /> 응답 원문 CSV
+                <Download size={15} aria-hidden="true" /> 응답 원문 CSV
               </button>
               <button
                 type="button"
@@ -388,17 +388,17 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                   });
                   setNotice(`설문 분석 결과 데이터(${file})를 CSV로 저장했어요.`);
                 }}
-                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                className={saasUi.btnCompactSecondary}
               >
-                <Download size={14} aria-hidden="true" /> 분석 결과 CSV
+                <Download size={15} aria-hidden="true" /> 분석 결과 CSV
               </button>
               <button
                 type="button"
                 disabled={!summary || summary.count === 0 || pdfBusy}
                 onClick={() => void handleExportPdf()}
-                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-3.5 text-xs font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-45"
+                className={saasUi.btnCompactPrimary}
               >
-                <FileDown size={14} aria-hidden="true" />
+                <FileDown size={15} aria-hidden="true" />
                 {pdfBusy ? 'PDF 생성 중…' : '리포트 내보내기'}
               </button>
             </>
@@ -407,108 +407,108 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
       </div>
 
       {notice && (
-        <p className="rounded-xl bg-[#eee9ff] px-4 py-2.5 text-[13px] font-medium text-[#4d30cf]" role="status">
+        <p className="rounded-xl bg-[#efeaff] px-4 py-3 text-[15px] font-semibold text-[#4125cc]" role="status">
           {notice}
         </p>
       )}
 
       {!summary ? (
-        <section className="rounded-2xl border border-[#e9e7f1] bg-white p-8 text-center text-sm text-[#62627a]">
+        <section className={`${saasUi.card} p-8 text-center text-[15px] text-[#565570]`}>
           {state.loading ? '설문 응답 데이터를 불러오는 중…' : '선택한 설문 데이터를 불러올 수 없어요. 새로고침을 눌러 주세요.'}
         </section>
       ) : summary.count === 0 ? (
-        <section className="grid justify-items-center gap-3 rounded-2xl border border-dashed border-[#d8d3ea] bg-white px-6 py-12 text-center">
-          <span className="grid size-12 place-items-center rounded-xl bg-[#f4f0ff] text-[#5b3df5]">
-            <ClipboardList size={22} aria-hidden="true" />
+        <section className="grid justify-items-center gap-3 rounded-2xl border border-dashed border-[#dcd8e8] bg-white px-6 py-12 text-center">
+          <span className="grid size-13 place-items-center rounded-xl bg-[#f4f0ff] text-[#4c2ee6]">
+            <ClipboardList size={24} aria-hidden="true" />
           </span>
-          <h2 className="text-base font-bold text-[#22213a]">"{summary.title}" 설문에 아직 수집된 응답이 없어요</h2>
-          <p className="max-w-md text-[13px] text-[#62627a]">
+          <h2 className="text-[18px] font-bold text-[#17162b]">"{summary.title}" 설문에 아직 수집된 응답이 없어요</h2>
+          <p className="max-w-md text-[15px] leading-relaxed text-[#565570]">
             배포 링크를 타겟 유저에게 공유하거나, 응답 화면을 열어 직접 테스트 응답을 제출하면 즉시 D3 차트와 키워드 분석이 표시돼요.
           </p>
-          <div className="mt-1 flex flex-wrap justify-center gap-2">
+          <div className="mt-1 flex flex-wrap justify-center gap-2.5">
             <button
               type="button"
               onClick={() => selectedKey && void copySurveyLink(selectedKey)}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
+              className={saasUi.btnPrimary}
             >
-              <Link2 size={15} aria-hidden="true" /> 배포 링크 복사하기
+              <Link2 size={16} aria-hidden="true" /> 배포 링크 복사하기
             </button>
             <a
               href={`/survey/${summary.id}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+              className={saasUi.btnSecondary}
             >
-              응답 화면에서 테스트하기 <ArrowUpRight size={15} aria-hidden="true" />
+              응답 화면에서 테스트하기 <ArrowUpRight size={16} aria-hidden="true" />
             </a>
           </div>
         </section>
       ) : (
         <>
           {/* KPI Summary Strip */}
-          <section aria-label="설문 핵심 지표" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-2xl border border-[#e9e7f1] bg-white px-4 py-3.5">
-              <span className="block text-xs font-medium text-[#62627a]">총 수집 응답</span>
-              <span className="tnum mt-1 block font-display text-2xl font-extrabold text-[#22213a]">
+          <section aria-label="설문 핵심 지표" className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+            <div className={`${saasUi.card} px-5 py-4`}>
+              <span className="block text-[14px] font-semibold text-[#565570]">총 수집 응답</span>
+              <span className="tnum mt-1.5 block font-display text-[28px] font-extrabold text-[#17162b]">
                 {summary.count}
-                <small className="ml-0.5 text-xs font-semibold text-[#62627a]">건</small>
+                <small className="ml-1 text-[14px] font-semibold text-[#565570]">건</small>
               </span>
-              <span className={`mt-1 block text-xs font-semibold ${summary.active ? 'text-[#14674d]' : 'text-[#62627a]'}`}>
+              <span className={`mt-1 block text-[13px] font-bold ${summary.active ? 'text-[#14674d]' : 'text-[#565570]'}`}>
                 {summary.active ? '응답 접수 중' : '접수 종료됨'}
               </span>
             </div>
 
-            <div className="rounded-2xl border border-[#e9e7f1] bg-white px-4 py-3.5">
-              <span className="block text-xs font-medium text-[#62627a]">설문 문항 구성</span>
-              <span className="tnum mt-1 block font-display text-2xl font-extrabold text-[#22213a]">
+            <div className={`${saasUi.card} px-5 py-4`}>
+              <span className="block text-[14px] font-semibold text-[#565570]">설문 문항 구성</span>
+              <span className="tnum mt-1.5 block font-display text-[28px] font-extrabold text-[#17162b]">
                 {summary.questions.length}
-                <small className="ml-0.5 text-xs font-semibold text-[#62627a]">문항</small>
+                <small className="ml-1 text-[14px] font-semibold text-[#565570]">문항</small>
               </span>
-              <span className="tnum mt-1 block text-xs text-[#62627a]">
+              <span className="tnum mt-1 block text-[13px] text-[#565570]">
                 객관식 {summary.questions.filter((q) => q.type === 'choice').length} · 척도{' '}
                 {summary.questions.filter((q) => q.type === 'scale').length} · 서술{' '}
                 {summary.questions.filter((q) => q.type === 'text').length}
               </span>
             </div>
 
-            <div className="rounded-2xl border border-[#e9e7f1] bg-white px-4 py-3.5">
-              <span className="block text-xs font-medium text-[#62627a]">5점 척도 전체 평균</span>
-              <span className="tnum mt-1 block font-display text-2xl font-extrabold text-[#5b3df5]">
+            <div className={`${saasUi.card} px-5 py-4`}>
+              <span className="block text-[14px] font-semibold text-[#565570]">5점 척도 전체 평균</span>
+              <span className="tnum mt-1.5 block font-display text-[28px] font-extrabold text-[#4c2ee6]">
                 {overallScaleAvg !== null ? overallScaleAvg.toFixed(2) : '—'}
                 {overallScaleAvg !== null && (
-                  <small className="ml-0.5 text-xs font-semibold text-[#62627a]">/ 5.0</small>
+                  <small className="ml-1 text-[14px] font-semibold text-[#565570]">/ 5.0</small>
                 )}
               </span>
-              <span className="mt-1 block text-xs text-[#62627a]">
+              <span className="mt-1 block text-[13px] text-[#565570]">
                 {overallScaleAvg !== null ? '척도 문항 기준 평균 점수' : '척도형 문항 없음'}
               </span>
             </div>
 
-            <div className="rounded-2xl border border-[#e9e7f1] bg-white px-4 py-3.5">
-              <span className="block text-xs font-medium text-[#62627a]">최다 언급 키워드</span>
-              <span className="mt-1 block truncate font-display text-2xl font-extrabold text-[#22213a]">
+            <div className={`${saasUi.card} px-5 py-4`}>
+              <span className="block text-[14px] font-semibold text-[#565570]">최다 언급 키워드</span>
+              <span className="mt-1.5 block truncate font-display text-[28px] font-extrabold text-[#17162b]">
                 {keywords[0]?.word ?? '—'}
               </span>
-              <span className="tnum mt-1 block text-xs text-[#62627a]">
+              <span className="tnum mt-1 block text-[13px] text-[#565570]">
                 {keywords.length ? `총 ${keywords.length}개 키워드 추출 · 최다 ${keywords[0].count}회` : '텍스트 응답 대기 중'}
               </span>
             </div>
           </section>
 
           {/* Row 1: D3 Question Distribution (Bar + Donut) */}
-          <section className="grid gap-4 rounded-2xl border border-[#e9e7f1] bg-white p-5">
+          <section className={`grid gap-4 ${saasUi.card} p-5 sm:p-6`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="flex items-center gap-2 text-base font-bold text-[#22213a]">
-                  <BarChart3 size={18} className="text-[#5b3df5]" aria-hidden="true" />
+                <h2 className={`flex items-center gap-2 ${saasUi.sectionTitle}`}>
+                  <BarChart3 size={20} className="text-[#4c2ee6]" aria-hidden="true" />
                   문항별 응답 분포 (D3 차트)
                 </h2>
-                <p className="mt-0.5 text-xs text-[#62627a]">
+                <p className="mt-1 text-[14px] text-[#565570]">
                   문항을 선택하면 응답 빈도 막대 차트와 비율 도넛 차트를 함께 확인할 수 있어요.
                 </p>
               </div>
               {activeDistribution && (
-                <span className="tnum text-xs font-semibold text-[#4d30cf]">
+                <span className="tnum text-[14px] font-semibold text-[#4125cc]">
                   {types[activeDistribution.type]} · 응답 {activeDistribution.answeredCount}/{activeDistribution.totalCount}건
                   {activeDistribution.type === 'scale' && activeDistribution.averageScore
                     ? ` · 평균 ${activeDistribution.averageScore.toFixed(2)}점`
@@ -517,8 +517,8 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
               )}
             </div>
 
-            {/* Question Selector Pills */}
-            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="분석할 문항 선택">
+            {/* Question Selector Tabs */}
+            <div className="flex flex-wrap gap-2" role="tablist" aria-label="분석할 문항 선택">
               {distributions.map((dist, idx) => {
                 const active = idx === selectedQuestionIdx;
                 return (
@@ -528,13 +528,13 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                     role="tab"
                     aria-selected={active}
                     onClick={() => setSelectedQuestionIdx(idx)}
-                    className={`min-h-9 rounded-lg border px-3 text-left text-xs font-semibold transition-colors ${
+                    className={`min-h-10 rounded-xl border px-3.5 py-2 text-left text-[14px] font-semibold transition-colors ${
                       active
-                        ? 'border-[#5b3df5] bg-[#eee8ff] text-[#4d30cf]'
-                        : 'border-[#e6e3f0] bg-[#faf9fd] text-[#54546d] hover:border-[#cfc1f3] hover:text-[#22213a]'
+                        ? 'border-[#4c2ee6] bg-[#efeaff] text-[#4125cc]'
+                        : 'border-[#dcd8e8] bg-[#f8f7fc] text-[#44435c] hover:border-[#cfc1f3] hover:text-[#17162b]'
                     }`}
                   >
-                    <span className="tnum mr-1 font-mono">Q{idx + 1}</span>
+                    <span className="tnum mr-1.5 font-mono">Q{idx + 1}</span>
                     {truncateLabel(dist.label, 24)}
                   </button>
                 );
@@ -542,15 +542,15 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
             </div>
 
             {activeDistribution && (
-              <div className="grid gap-4 border-t border-[#efedf6] pt-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+              <div className="grid gap-5 border-t border-[#e6e3f0] pt-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
                 <div className="min-w-0">
-                  <h3 className="mb-2 text-sm font-bold text-[#22213a]">
+                  <h3 className="mb-3 text-[16px] font-bold text-[#17162b]">
                     Q{activeDistribution.questionIndex + 1}. {activeDistribution.label}
                   </h3>
                   <DistributionBarChart buckets={activeDistribution.buckets} externalRef={barSvgRef} />
                 </div>
-                <div className="min-w-0 rounded-xl border border-[#efedf6] bg-[#faf9fd] p-4">
-                  <h3 className="mb-1 text-xs font-bold text-[#62627a]">응답 비율 분포</h3>
+                <div className="min-w-0 rounded-xl border border-[#e6e3f0] bg-[#f8f7fc] p-4 sm:p-5">
+                  <h3 className="mb-2 text-[14px] font-bold text-[#565570]">응답 비율 분포</h3>
                   <DistributionDonutChart
                     buckets={activeDistribution.buckets}
                     centerValue={
@@ -567,26 +567,26 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
           </section>
 
           {/* Row 2: D3 Keyword Extraction + D3 Response Timeline */}
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
             {/* Keyword Extraction D3 Chart */}
-            <section className="grid min-w-0 gap-3 rounded-2xl border border-[#e9e7f1] bg-white p-5">
+            <section className={`grid min-w-0 gap-3.5 ${saasUi.card} p-5 sm:p-6`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="flex items-center gap-2 text-base font-bold text-[#22213a]">
-                    <Hash size={17} className="text-[#5b3df5]" aria-hidden="true" />
+                  <h2 className={`flex items-center gap-2 ${saasUi.sectionTitle}`}>
+                    <Hash size={19} className="text-[#4c2ee6]" aria-hidden="true" />
                     키워드 추출 시각화 (D3)
                   </h2>
-                  <p className="mt-0.5 text-xs text-[#62627a]">
+                  <p className="mt-1 text-[14px] text-[#565570]">
                     버블이나 막대를 클릭하면 아래 응답 원문에서 해당 키워드가 포함된 답변만 모아볼 수 있어요.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 rounded-lg border border-[#e6e3f0] bg-[#faf9fd] p-0.5">
+                <div className="flex items-center gap-1 rounded-xl border border-[#dcd8e8] bg-[#f8f7fc] p-1">
                   <button
                     type="button"
                     onClick={() => setKeywordChartMode('bubble')}
-                    className={`min-h-8 whitespace-nowrap rounded-md px-2.5 text-xs font-semibold ${
-                      keywordChartMode === 'bubble' ? 'bg-[#5b3df5] text-white' : 'text-[#62627a]'
+                    className={`min-h-9 whitespace-nowrap rounded-lg px-3 text-[14px] font-semibold transition-colors ${
+                      keywordChartMode === 'bubble' ? 'bg-[#4c2ee6] text-white' : 'text-[#565570] hover:text-[#17162b]'
                     }`}
                   >
                     버블 차트
@@ -594,8 +594,8 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                   <button
                     type="button"
                     onClick={() => setKeywordChartMode('bar')}
-                    className={`min-h-8 whitespace-nowrap rounded-md px-2.5 text-xs font-semibold ${
-                      keywordChartMode === 'bar' ? 'bg-[#5b3df5] text-white' : 'text-[#62627a]'
+                    className={`min-h-9 whitespace-nowrap rounded-lg px-3 text-[14px] font-semibold transition-colors ${
+                      keywordChartMode === 'bar' ? 'bg-[#4c2ee6] text-white' : 'text-[#565570] hover:text-[#17162b]'
                     }`}
                   >
                     빈도 막대
@@ -603,31 +603,31 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#62627a]">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-[#5b3df5]" aria-hidden="true" /> 중립/핵심어
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[14px] text-[#565570]">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-3 rounded-sm bg-[#4c2ee6]" aria-hidden="true" /> 중립/핵심어
                   </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-[#1f8a65]" aria-hidden="true" /> 긍정 신호
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-3 rounded-sm bg-[#19825f]" aria-hidden="true" /> 긍정 신호
                   </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-full bg-[#a6214e]" aria-hidden="true" /> 불편/개선요청
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-3 rounded-sm bg-[#b01e4a]" aria-hidden="true" /> 불편/개선요청
                   </span>
                 </div>
                 {selectedKeyword && (
                   <button
                     type="button"
                     onClick={() => setSelectedKeyword('')}
-                    className="inline-flex items-center gap-1 font-bold text-[#5b3df5] hover:underline"
+                    className="inline-flex items-center gap-1.5 font-bold text-[#4125cc] hover:underline"
                   >
-                    <FilterX size={13} aria-hidden="true" /> "{selectedKeyword}" 필터 해제
+                    <FilterX size={15} aria-hidden="true" /> "{selectedKeyword}" 필터 해제
                   </button>
                 )}
               </div>
 
               {keywords.length === 0 ? (
-                <div className="grid place-items-center rounded-xl border border-dashed border-[#e2deee] py-12 text-center text-xs text-[#62627a]">
+                <div className="grid place-items-center rounded-xl border border-dashed border-[#dcd8e8] py-12 text-center text-[14px] text-[#565570]">
                   서술형·텍스트 응답이 수집되면 주요 키워드를 자동으로 추출해 시각화해요.
                 </div>
               ) : keywordChartMode === 'bubble' ? (
@@ -648,13 +648,13 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
             </section>
 
             {/* Timeline D3 Chart */}
-            <section className="grid min-w-0 content-start gap-3 rounded-2xl border border-[#e9e7f1] bg-white p-5">
+            <section className={`grid min-w-0 content-start gap-3.5 ${saasUi.card} p-5 sm:p-6`}>
               <div>
-                <h2 className="flex items-center gap-2 text-base font-bold text-[#22213a]">
-                  <TrendingUp size={17} className="text-[#5b3df5]" aria-hidden="true" />
+                <h2 className={`flex items-center gap-2 ${saasUi.sectionTitle}`}>
+                  <TrendingUp size={19} className="text-[#4c2ee6]" aria-hidden="true" />
                   시간별 응답 수집 추이 (D3)
                 </h2>
-                <p className="mt-0.5 text-xs text-[#62627a]">
+                <p className="mt-1 text-[14px] text-[#565570]">
                   일자 또는 시간대별 신규 응답 수와 누적 응답 흐름을 보여줘요.
                 </p>
               </div>
@@ -662,9 +662,9 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
 
               {/* Quick Top Keywords Summary */}
               {keywords.length > 0 && (
-                <div className="grid gap-2 border-t border-[#efedf6] pt-3">
-                  <h3 className="text-xs font-bold text-[#62627a]">상위 추출 키워드 TOP 6</h3>
-                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                <div className="grid gap-2.5 border-t border-[#e6e3f0] pt-3.5">
+                  <h3 className="text-[14px] font-bold text-[#565570]">상위 추출 키워드 TOP 6</h3>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {keywords.slice(0, 6).map((kw) => {
                       const active = selectedKeyword === kw.word;
                       return (
@@ -672,14 +672,14 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                           key={kw.word}
                           type="button"
                           onClick={() => setSelectedKeyword(active ? '' : kw.word)}
-                          className={`flex min-h-9 items-center justify-between gap-1.5 rounded-lg border px-2.5 text-xs transition-colors ${
+                          className={`flex min-h-10 items-center justify-between gap-1.5 rounded-xl border px-3 text-[14px] transition-colors ${
                             active
-                              ? 'border-[#5b3df5] bg-[#eee8ff] font-bold text-[#4d30cf]'
-                              : 'border-[#ece9f5] bg-[#faf9fd] text-[#22213a] hover:border-[#cfc1f3]'
+                              ? 'border-[#4c2ee6] bg-[#efeaff] font-bold text-[#4125cc]'
+                              : 'border-[#dcd8e8] bg-[#f8f7fc] text-[#17162b] hover:border-[#cfc1f3]'
                           }`}
                         >
                           <span className="truncate font-medium">{kw.word}</span>
-                          <span className="tnum shrink-0 font-mono text-[11px] font-bold text-[#5b3df5]">
+                          <span className="tnum shrink-0 font-mono text-[13px] font-bold text-[#4125cc]">
                             {kw.count}
                           </span>
                         </button>
@@ -692,14 +692,14 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
           </div>
 
           {/* Row 3: AI Deep Survey Insight Summary */}
-          <section className="grid gap-3 rounded-2xl border border-[#e2d5fd] bg-[#faf7ff] p-5">
+          <section className={`grid gap-3.5 ${saasUi.cardSoft} p-5 sm:p-6`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="flex items-center gap-2 text-base font-bold text-[#22213a]">
-                  <Sparkles size={17} className="text-[#5b3df5]" aria-hidden="true" />
+                <h2 className={`flex items-center gap-2 ${saasUi.sectionTitle}`}>
+                  <Sparkles size={19} className="text-[#4c2ee6]" aria-hidden="true" />
                   AI 응답 인사이트 및 키워드 감성 분석
                 </h2>
-                <p className="mt-0.5 text-xs text-[#62627a]">
+                <p className="mt-1 text-[14px] text-[#565570]">
                   수집된 응답 전체를 AI가 종합 분석해 핵심 발견사항, 세그먼트 신호, 감성별 키워드를 정리해 드려요.
                 </p>
               </div>
@@ -707,9 +707,9 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                 type="button"
                 disabled={analyzing || summary.count === 0}
                 onClick={() => void runAiAnalysis()}
-                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-4 text-xs font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+                className={saasUi.btnPrimary}
               >
-                <Sparkles size={14} aria-hidden="true" />
+                <Sparkles size={16} aria-hidden="true" />
                 {analyzing ? 'AI가 응답 데이터를 분석 중…' : currentAiAnalysis ? 'AI 분석 새로고침' : 'AI 분석 실행하기'}
               </button>
             </div>
@@ -717,42 +717,42 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
             {aiError && (
               <div
                 role="alert"
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#f5c7d3] bg-[#fff0f3] px-3.5 py-2.5 text-[13px] text-[#9a2148]"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-3 text-[15px] text-[#9f1d45]"
               >
                 <span>{aiError}</span>
                 <button
                   type="button"
                   onClick={() => void runAiAnalysis()}
-                  className="inline-flex min-h-8 items-center gap-1 rounded-md border border-[#e6a4b7] bg-white px-2.5 text-xs font-bold text-[#9a2148] hover:bg-[#fff8fa]"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e6a4b7] bg-white px-3 text-[14px] font-bold text-[#9f1d45] hover:bg-[#fff8fa]"
                 >
-                  <RotateCcw size={13} aria-hidden="true" /> 다시 시도
+                  <RotateCcw size={14} aria-hidden="true" /> 다시 시도
                 </button>
               </div>
             )}
 
             {currentAiAnalysis && (
-              <div className="grid gap-3 rounded-xl border border-[#e8ddfb] bg-white p-4 text-[13px]">
-                <p className="leading-relaxed text-[#22213a]">{currentAiAnalysis.overview}</p>
-                <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-4 rounded-xl border border-[#dfd7fb] bg-white p-5 text-[15px]">
+                <p className="leading-relaxed text-[#17162b]">{currentAiAnalysis.overview}</p>
+                <div className="grid gap-4 md:grid-cols-3">
                   <div>
-                    <b className="text-xs text-[#4d30cf]">핵심 발견 사항</b>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-[#22213a]">
+                    <b className="text-[14px] font-bold text-[#4125cc]">핵심 발견 사항</b>
+                    <ul className="mt-1.5 list-disc space-y-1.5 pl-4 text-[#17162b]">
                       {currentAiAnalysis.keyFindings.map((item, idx) => (
                         <li key={idx}>{item}</li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <b className="text-xs text-[#4d30cf]">타겟 유저 신호</b>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-[#22213a]">
+                    <b className="text-[14px] font-bold text-[#4125cc]">타겟 유저 신호</b>
+                    <ul className="mt-1.5 list-disc space-y-1.5 pl-4 text-[#17162b]">
                       {currentAiAnalysis.segmentSignals.map((item, idx) => (
                         <li key={idx}>{item}</li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <b className="text-xs text-[#4d30cf]">후속 실행 제안</b>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-[#22213a]">
+                    <b className="text-[14px] font-bold text-[#4125cc]">후속 실행 제안</b>
+                    <ul className="mt-1.5 list-disc space-y-1.5 pl-4 text-[#17162b]">
                       {currentAiAnalysis.recommendations.map((item, idx) => (
                         <li key={idx}>{item}</li>
                       ))}
@@ -764,17 +764,17 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
           </section>
 
           {/* Row 4: Collected Responses Table (Keyword-Filterable) */}
-          <section className="overflow-hidden rounded-2xl border border-[#e9e7f1] bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
+          <section className={`overflow-hidden ${saasUi.card}`}>
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
               <div>
-                <h2 className="text-base font-bold text-[#22213a]">
+                <h2 className={saasUi.sectionTitle}>
                   수집된 응답 원문{' '}
-                  <span className="tnum font-mono text-sm text-[#5b3df5]">
+                  <span className="tnum font-mono text-[16px] text-[#4c2ee6]">
                     {filteredResponses.length}
                     {selectedKeyword ? ` / ${summary.count}` : ''}건
                   </span>
                 </h2>
-                <p className="text-xs text-[#62627a]">
+                <p className="mt-0.5 text-[14px] text-[#565570]">
                   {selectedKeyword
                     ? `"${selectedKeyword}" 키워드가 포함된 응답을 필터링해 보고 있어요.`
                     : '위 키워드 차트를 클릭하면 관련 응답만 바로 모아볼 수 있어요.'}
@@ -785,9 +785,9 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                   <button
                     type="button"
                     onClick={() => setSelectedKeyword('')}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#f5f1ff]"
+                    className={saasUi.btnCompactSoft}
                   >
-                    <FilterX size={14} aria-hidden="true" /> 전체 응답 보기
+                    <FilterX size={15} aria-hidden="true" /> 전체 응답 보기
                   </button>
                 )}
                 {selectedKey && (
@@ -795,26 +795,26 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                     type="button"
                     disabled={summary.count === 0 || csvBusy}
                     onClick={() => void exportCsv(selectedKey)}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                    className={saasUi.btnCompactSecondary}
                   >
-                    <Download size={14} aria-hidden="true" /> 응답 원문 CSV
+                    <Download size={15} aria-hidden="true" /> 응답 원문 CSV
                   </button>
                 )}
               </div>
             </div>
 
-            <div className="overflow-x-auto border-t border-[#efedf5]" role="region" aria-label="응답 원문 목록" tabIndex={0}>
-              <table className="w-full min-w-[640px] border-collapse text-left text-[13px] tnum">
+            <div className="overflow-x-auto border-t border-[#e6e3f0]" role="region" aria-label="응답 원문 목록" tabIndex={0}>
+              <table className="w-full min-w-[640px] border-collapse text-left text-[15px] tnum">
                 <thead>
-                  <tr className="bg-[#f8f8fc] text-xs font-semibold text-[#565771]">
-                    <th scope="col" className="py-2.5 pl-5 pr-3">
+                  <tr className="bg-[#f8f7fc] text-[13px] font-semibold text-[#565570]">
+                    <th scope="col" className="py-3 pl-5 pr-3 sm:pl-6">
                       #
                     </th>
-                    <th scope="col" className="px-3 py-2.5">
+                    <th scope="col" className="px-3 py-3">
                       제출 시각
                     </th>
                     {summary.questions.map((q, qIdx) => (
-                      <th key={qIdx} scope="col" className="max-w-[220px] px-3 py-2.5">
+                      <th key={qIdx} scope="col" className="max-w-[240px] px-3 py-3">
                         <span className="block truncate" title={q.label}>
                           Q{qIdx + 1}. {q.label}
                         </span>
@@ -822,15 +822,15 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#efedf5]">
+                <tbody className="divide-y divide-[#e6e3f0]">
                   {filteredResponses.map(({ row, idx }) => (
-                    <tr key={row.id} className="align-top hover:bg-[#faf9ff]">
-                      <td className="py-3 pl-5 pr-3 font-mono text-xs text-[#62627a]">#{idx + 1}</td>
-                      <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#62627a]">
+                    <tr key={row.id} className="align-top transition-colors hover:bg-[#faf9ff]">
+                      <td className="py-3.5 pl-5 pr-3 font-mono text-[14px] text-[#565570] sm:pl-6">#{idx + 1}</td>
+                      <td className="whitespace-nowrap px-3 py-3.5 font-mono text-[14px] text-[#565570]">
                         {row.createdAt.slice(0, 16).replace('T', ' ')}
                       </td>
                       {summary.questions.map((_, qIdx) => (
-                        <td key={qIdx} className="max-w-[260px] px-3 py-3 text-[#22213a]">
+                        <td key={qIdx} className="max-w-[280px] px-3 py-3.5 text-[#17162b]">
                           {row.answers[qIdx] ? highlightMatch(row.answers[qIdx], selectedKeyword) : '—'}
                         </td>
                       ))}
@@ -839,7 +839,7 @@ export function SurveyAnalytics({ state }: { state: ReturnType<typeof useSurveys
                 </tbody>
               </table>
               {filteredResponses.length === 0 && (
-                <p className="px-5 py-8 text-center text-sm text-[#62627a]">
+                <p className="px-5 py-8 text-center text-[15px] text-[#565570]">
                   선택한 키워드가 포함된 응답이 없어요. 필터를 해제해 보세요.
                 </p>
               )}
@@ -877,15 +877,15 @@ function DistributionBarChart({
     const svg = d3.select(svgEl);
     svg.selectAll('*').remove();
 
-    const rowHeight = 40;
+    const rowHeight = 44;
     const margin = {
       top: 10,
-      right: 74,
-      bottom: 24,
-      left: width < 420 ? 96 : 138,
+      right: 88,
+      bottom: 26,
+      left: width < 420 ? 108 : 150,
     };
     const innerW = Math.max(120, width - margin.left - margin.right);
-    const innerH = Math.max(120, buckets.length * rowHeight);
+    const innerH = Math.max(132, buckets.length * rowHeight);
     const totalH = innerH + margin.top + margin.bottom;
 
     svg.attr('width', width).attr('height', totalH).attr('viewBox', `0 0 ${width} ${totalH}`);
@@ -909,16 +909,16 @@ function DistributionBarChart({
       .attr('x2', (d) => x(d))
       .attr('y1', 0)
       .attr('y2', innerH)
-      .attr('stroke', '#efedf6')
+      .attr('stroke', '#e6e3f0')
       .attr('stroke-dasharray', '3 3');
 
     // Bottom axis
     g.append('g')
       .attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(x).ticks(Math.min(5, maxCount)).tickFormat(d3.format('d')))
-      .call((axis) => axis.select('.domain').attr('stroke', '#e2deee'))
+      .call((axis) => axis.select('.domain').attr('stroke', '#dcd8e8'))
       .call((axis) => axis.selectAll('.tick line').remove())
-      .call((axis) => axis.selectAll('text').attr('fill', '#62627a').attr('font-size', '11px'));
+      .call((axis) => axis.selectAll('text').attr('fill', '#565570').attr('font-size', '13px'));
 
     // Y labels
     g.selectAll('.y-label')
@@ -929,10 +929,10 @@ function DistributionBarChart({
       .attr('y', (d) => (y(d.label) ?? 0) + y.bandwidth() / 2)
       .attr('dy', '0.35em')
       .attr('text-anchor', 'end')
-      .attr('fill', '#22213a')
-      .attr('font-size', '12px')
+      .attr('fill', '#17162b')
+      .attr('font-size', '14px')
       .attr('font-weight', '600')
-      .text((d) => truncateLabel(d.label, width < 420 ? 10 : 16));
+      .text((d) => truncateLabel(d.label, width < 420 ? 10 : 15));
 
     // Background track
     g.selectAll('.bar-track')
@@ -944,7 +944,7 @@ function DistributionBarChart({
       .attr('width', innerW)
       .attr('height', y.bandwidth())
       .attr('rx', 6)
-      .attr('fill', '#f5f4fa');
+      .attr('fill', '#f4f2fa');
 
     // Data bars
     const bars = g
@@ -967,8 +967,8 @@ function DistributionBarChart({
       .attr('x', innerW + 8)
       .attr('y', (d) => (y(d.label) ?? 0) + y.bandwidth() / 2)
       .attr('dy', '0.35em')
-      .attr('fill', '#22213a')
-      .attr('font-size', '12px')
+      .attr('fill', '#17162b')
+      .attr('font-size', '14px')
       .attr('font-weight', '700')
       .text((d) => `${d.count}건 (${d.pct}%)`);
 
@@ -977,14 +977,14 @@ function DistributionBarChart({
     const tipBg = tooltip
       .append('rect')
       .attr('rx', 8)
-      .attr('fill', '#22213a')
-      .attr('height', 30);
+      .attr('fill', '#17162b')
+      .attr('height', 32);
     const tipText = tooltip
       .append('text')
       .attr('fill', '#ffffff')
-      .attr('font-size', '11px')
+      .attr('font-size', '13px')
       .attr('font-weight', '600')
-      .attr('y', 19)
+      .attr('y', 21)
       .attr('x', 10);
 
     bars
@@ -992,9 +992,9 @@ function DistributionBarChart({
         d3.select(this).attr('opacity', 0.82);
         const label = `${d.label}: ${d.count}명 (${d.pct}%)`;
         tipText.text(label);
-        const textLen = Math.max(96, label.length * 7 + 22);
+        const textLen = Math.max(108, label.length * 8 + 24);
         tipBg.attr('width', textLen);
-        const barY = margin.top + (y(d.label) ?? 0) - 34;
+        const barY = margin.top + (y(d.label) ?? 0) - 36;
         const tx = Math.min(width - textLen - 6, margin.left + Math.max(0, x(d.count) / 2 - textLen / 2));
         tooltip.attr('transform', `translate(${Math.max(4, tx)},${Math.max(4, barY)})`).attr('opacity', 1);
       })
@@ -1051,7 +1051,7 @@ function DistributionDonutChart({
     const g = svg.append('g').attr('transform', `translate(${size / 2},${size / 2})`);
 
     if (!nonZeroBuckets.length) {
-      g.append('circle').attr('r', radius).attr('fill', 'none').attr('stroke', '#e9e7f1').attr('stroke-width', 16);
+      g.append('circle').attr('r', radius).attr('fill', 'none').attr('stroke', '#e6e3f0').attr('stroke-width', 16);
       return;
     }
 
@@ -1075,8 +1075,8 @@ function DistributionDonutChart({
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '-0.1em')
-      .attr('fill', '#22213a')
-      .attr('font-size', '22px')
+      .attr('fill', '#17162b')
+      .attr('font-size', '24px')
       .attr('font-weight', '800')
       .text(centerValue);
 
@@ -1084,8 +1084,8 @@ function DistributionDonutChart({
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '1.4em')
-      .attr('fill', '#62627a')
-      .attr('font-size', '11px')
+      .attr('fill', '#565570')
+      .attr('font-size', '13px')
       .attr('font-weight', '600')
       .text(centerLabel);
 
@@ -1093,7 +1093,7 @@ function DistributionDonutChart({
       .data(pie(nonZeroBuckets))
       .join('path')
       .attr('d', arc)
-      .attr('fill', (d) => colorIndexMap.get(d.data.label) ?? '#5b3df5')
+      .attr('fill', (d) => colorIndexMap.get(d.data.label) ?? '#4c2ee6')
       .attr('stroke', '#ffffff')
       .attr('stroke-width', 1.5)
       .attr('cursor', 'pointer')
@@ -1116,20 +1116,20 @@ function DistributionDonutChart({
   }, [buckets, nonZeroBuckets, width, centerValue, centerLabel]);
 
   return (
-    <div ref={wrapRef} className="grid items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)]">
+    <div ref={wrapRef} className="grid items-center gap-3.5 sm:grid-cols-[auto_minmax(0,1fr)]">
       <div className="flex justify-center">
         <svg ref={attachRef} className="block" role="img" aria-label="문항 응답 비율 도넛 차트" />
       </div>
-      <ul className="grid gap-1.5 text-xs">
+      <ul className="grid gap-2 text-[14px]">
         {buckets.map((b, i) => (
           <li key={b.label} className="flex items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-2 text-[#22213a]">
-              <svg width="10" height="10" className="shrink-0" aria-hidden="true">
-                <rect width="10" height="10" rx="3" fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+            <span className="flex min-w-0 items-center gap-2 text-[#17162b]">
+              <svg width="11" height="11" className="shrink-0" aria-hidden="true">
+                <rect width="11" height="11" rx="3" fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
               </svg>
               <span className="truncate">{b.label}</span>
             </span>
-            <span className="tnum shrink-0 font-mono font-semibold text-[#62627a]">
+            <span className="tnum shrink-0 font-mono text-[13px] font-semibold text-[#565570]">
               {b.count} ({b.pct}%)
             </span>
           </li>
@@ -1208,12 +1208,12 @@ function KeywordPackChart({
       .attr('r', (d) => d.r)
       .attr('fill', (d) => {
         const kw = d.data.dataRef;
-        if (!kw) return '#eee8ff';
+        if (!kw) return '#efeaff';
         return selected === kw.word ? sentimentColor(kw.sentiment) : sentimentSoftBg(kw.sentiment);
       })
       .attr('stroke', (d) => {
         const kw = d.data.dataRef;
-        return kw ? sentimentColor(kw.sentiment) : '#5b3df5';
+        return kw ? sentimentColor(kw.sentiment) : '#4c2ee6';
       })
       .attr('stroke-width', (d) => (selected === d.data.dataRef?.word ? 2.5 : 1.25));
 
@@ -1223,10 +1223,10 @@ function KeywordPackChart({
       .attr('dy', (d) => (d.r >= 28 ? '-0.15em' : '0.32em'))
       .attr('fill', (d) => {
         const kw = d.data.dataRef;
-        if (!kw) return '#22213a';
+        if (!kw) return '#17162b';
         return selected === kw.word ? '#ffffff' : sentimentText(kw.sentiment);
       })
-      .attr('font-size', (d) => (d.r >= 44 ? '13px' : d.r >= 30 ? '11px' : '10px'))
+      .attr('font-size', (d) => (d.r >= 44 ? '15px' : d.r >= 30 ? '13px' : '12px'))
       .attr('font-weight', '700')
       .text((d) => {
         if (d.r < 17) return '';
@@ -1241,23 +1241,23 @@ function KeywordPackChart({
       .attr('dy', '1.15em')
       .attr('fill', (d) => {
         const kw = d.data.dataRef;
-        if (!kw) return '#62627a';
-        return selected === kw.word ? '#efeaff' : '#62627a';
+        if (!kw) return '#565570';
+        return selected === kw.word ? '#efeaff' : '#565570';
       })
-      .attr('font-size', '10px')
+      .attr('font-size', '12px')
       .attr('font-weight', '600')
       .text((d) => `${d.data.dataRef?.count ?? 0}회`);
 
     // Hover SVG Tooltip
     const tooltip = svg.append('g').attr('pointer-events', 'none').attr('opacity', 0);
-    const tipRect = tooltip.append('rect').attr('rx', 8).attr('fill', '#22213a').attr('height', 30);
+    const tipRect = tooltip.append('rect').attr('rx', 8).attr('fill', '#17162b').attr('height', 32);
     const tipTxt = tooltip
       .append('text')
       .attr('fill', '#ffffff')
-      .attr('font-size', '11px')
+      .attr('font-size', '13px')
       .attr('font-weight', '600')
       .attr('x', 10)
-      .attr('y', 19);
+      .attr('y', 21);
 
     nodes
       .on('mouseenter', function (_event, d) {
@@ -1266,10 +1266,10 @@ function KeywordPackChart({
         d3.select(this).select('circle').attr('stroke-width', 2.5);
         const msg = `${kw.word} · ${kw.count}회 (${kw.sentiment})`;
         tipTxt.text(msg);
-        const w = Math.max(100, msg.length * 7 + 22);
+        const w = Math.max(112, msg.length * 8 + 24);
         tipRect.attr('width', w);
         const tx = Math.min(width - w - 6, Math.max(6, d.x - w / 2));
-        const ty = Math.max(6, d.y - d.r - 36);
+        const ty = Math.max(6, d.y - d.r - 38);
         tooltip.attr('transform', `translate(${tx},${ty})`).attr('opacity', 1);
       })
       .on('mouseleave', function (_event, d) {
@@ -1280,7 +1280,7 @@ function KeywordPackChart({
   }, [keywords, selected, onSelect, width]);
 
   return (
-    <div ref={wrapRef} className="w-full overflow-hidden rounded-xl border border-[#efedf6] bg-[#fcfbfe]">
+    <div ref={wrapRef} className="w-full overflow-hidden rounded-xl border border-[#e6e3f0] bg-[#fcfbfe]">
       <svg ref={attachRef} className="block w-full" role="img" aria-label="추출 키워드 D3 버블 차트" />
     </div>
   );
@@ -1316,10 +1316,10 @@ function KeywordRankBarChart({
     const svg = d3.select(svgEl);
     svg.selectAll('*').remove();
 
-    const rowHeight = 32;
-    const margin = { top: 8, right: 80, bottom: 20, left: 100 };
+    const rowHeight = 36;
+    const margin = { top: 8, right: 92, bottom: 20, left: 112 };
     const innerW = Math.max(120, width - margin.left - margin.right);
-    const innerH = Math.max(140, keywords.length * rowHeight);
+    const innerH = Math.max(144, keywords.length * rowHeight);
     const totalH = innerH + margin.top + margin.bottom;
 
     svg.attr('width', width).attr('height', totalH).attr('viewBox', `0 0 ${width} ${totalH}`);
@@ -1347,8 +1347,8 @@ function KeywordRankBarChart({
       .attr('y', (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)
       .attr('dy', '0.35em')
       .attr('text-anchor', 'end')
-      .attr('fill', (d) => (selected === d.word ? '#4d30cf' : '#22213a'))
-      .attr('font-size', '12px')
+      .attr('fill', (d) => (selected === d.word ? '#4125cc' : '#17162b'))
+      .attr('font-size', '14px')
       .attr('font-weight', (d) => (selected === d.word ? '800' : '600'))
       .text((d) => truncateLabel(d.word, 10));
 
@@ -1359,7 +1359,7 @@ function KeywordRankBarChart({
       .attr('width', innerW)
       .attr('height', y.bandwidth())
       .attr('rx', 5)
-      .attr('fill', '#f5f4fa');
+      .attr('fill', '#f4f2fa');
 
     rows
       .append('rect')
@@ -1376,14 +1376,14 @@ function KeywordRankBarChart({
       .attr('x', innerW + 8)
       .attr('y', (d) => (y(d.word) ?? 0) + y.bandwidth() / 2)
       .attr('dy', '0.35em')
-      .attr('fill', '#22213a')
-      .attr('font-size', '11px')
+      .attr('fill', '#17162b')
+      .attr('font-size', '13px')
       .attr('font-weight', '700')
       .text((d) => `${d.count}회 · ${d.sentiment}`);
   }, [keywords, selected, onSelect, width]);
 
   return (
-    <div ref={wrapRef} className="w-full overflow-hidden rounded-xl border border-[#efedf6] bg-white p-2">
+    <div ref={wrapRef} className="w-full overflow-hidden rounded-xl border border-[#e6e3f0] bg-white p-2.5">
       <svg ref={attachRef} className="block w-full" role="img" aria-label="상위 키워드 빈도 막대 차트" />
     </div>
   );
@@ -1415,8 +1415,8 @@ function ResponseTimelineChart({
     const svg = d3.select(svgEl);
     svg.selectAll('*').remove();
 
-    const height = 210;
-    const margin = { top: 18, right: 18, bottom: 28, left: 34 };
+    const height = 224;
+    const margin = { top: 20, right: 20, bottom: 32, left: 42 };
     const innerW = Math.max(120, width - margin.left - margin.right);
     const innerH = height - margin.top - margin.bottom;
 
@@ -1445,21 +1445,21 @@ function ResponseTimelineChart({
       .attr('x2', innerW)
       .attr('y1', (d) => y(d))
       .attr('y2', (d) => y(d))
-      .attr('stroke', '#efedf6')
+      .attr('stroke', '#e6e3f0')
       .attr('stroke-dasharray', '3 3');
 
     g.append('g')
       .call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('d')))
       .call((axis) => axis.select('.domain').remove())
       .call((axis) => axis.selectAll('.tick line').remove())
-      .call((axis) => axis.selectAll('text').attr('fill', '#62627a').attr('font-size', '11px'));
+      .call((axis) => axis.selectAll('text').attr('fill', '#565570').attr('font-size', '13px'));
 
     g.append('g')
       .attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(x))
-      .call((axis) => axis.select('.domain').attr('stroke', '#e2deee'))
+      .call((axis) => axis.select('.domain').attr('stroke', '#dcd8e8'))
       .call((axis) => axis.selectAll('.tick line').remove())
-      .call((axis) => axis.selectAll('text').attr('fill', '#62627a').attr('font-size', '11px'));
+      .call((axis) => axis.selectAll('text').attr('fill', '#565570').attr('font-size', '13px'));
 
     const area = d3
       .area<TimelinePoint>()
@@ -1474,12 +1474,12 @@ function ResponseTimelineChart({
       .y((d) => y(d.cumulative))
       .curve(d3.curveMonotoneX);
 
-    g.append('path').datum(points).attr('d', area).attr('fill', '#eee8ff').attr('opacity', 0.75);
+    g.append('path').datum(points).attr('d', area).attr('fill', '#efeaff').attr('opacity', 0.78);
     g.append('path')
       .datum(points)
       .attr('d', line)
       .attr('fill', 'none')
-      .attr('stroke', '#5b3df5')
+      .attr('stroke', '#4c2ee6')
       .attr('stroke-width', 2.5);
 
     // Individual bucket bars in background for per-bucket volume
@@ -1493,18 +1493,18 @@ function ResponseTimelineChart({
       .attr('width', barW)
       .attr('height', (d) => Math.max(2, innerH - y(d.count)))
       .attr('rx', 3)
-      .attr('fill', '#4a7fd9')
-      .attr('opacity', 0.38);
+      .attr('fill', '#356bc9')
+      .attr('opacity', 0.36);
 
     const tooltip = svg.append('g').attr('pointer-events', 'none').attr('opacity', 0);
-    const tipBg = tooltip.append('rect').attr('rx', 7).attr('fill', '#22213a').attr('height', 28);
+    const tipBg = tooltip.append('rect').attr('rx', 8).attr('fill', '#17162b').attr('height', 30);
     const tipTxt = tooltip
       .append('text')
       .attr('fill', '#ffffff')
-      .attr('font-size', '11px')
+      .attr('font-size', '13px')
       .attr('font-weight', '600')
-      .attr('x', 9)
-      .attr('y', 18);
+      .attr('x', 10)
+      .attr('y', 20);
 
     g.selectAll('.point-dot')
       .data(points)
@@ -1514,19 +1514,19 @@ function ResponseTimelineChart({
       .attr('cy', (d) => y(d.cumulative))
       .attr('r', 5)
       .attr('fill', '#ffffff')
-      .attr('stroke', '#5b3df5')
+      .attr('stroke', '#4c2ee6')
       .attr('stroke-width', 2.5)
       .attr('cursor', 'pointer')
       .on('mouseenter', function (_event, d) {
-        d3.select(this).attr('r', 7).attr('fill', '#5b3df5');
+        d3.select(this).attr('r', 7).attr('fill', '#4c2ee6');
         const msg = `${d.label}: 신규 ${d.count}건 · 누적 ${d.cumulative}건`;
         tipTxt.text(msg);
-        const w = Math.max(120, msg.length * 6.8 + 20);
+        const w = Math.max(132, msg.length * 7.8 + 24);
         tipBg.attr('width', w);
         const cx = margin.left + (x(d.label) ?? 0);
         const cy = margin.top + y(d.cumulative);
         const tx = Math.min(width - w - 6, Math.max(6, cx - w / 2));
-        const ty = Math.max(4, cy - 36);
+        const ty = Math.max(4, cy - 38);
         tooltip.attr('transform', `translate(${tx},${ty})`).attr('opacity', 1);
       })
       .on('mouseleave', function () {
@@ -1538,12 +1538,12 @@ function ResponseTimelineChart({
   return (
     <div ref={wrapRef} className="w-full overflow-hidden">
       <svg ref={attachRef} className="block w-full" role="img" aria-label="시간별 응답 수집 추이 D3 차트" />
-      <div className="mt-1 flex items-center gap-4 text-[11px] text-[#62627a]">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-0.5 w-3 bg-[#5b3df5]" aria-hidden="true" /> 누적 응답 곡선
+      <div className="mt-1.5 flex items-center gap-4 text-[13px] text-[#565570]">
+        <span className="inline-flex items-center gap-2">
+          <span className="h-0.5 w-3.5 bg-[#4c2ee6]" aria-hidden="true" /> 누적 응답 곡선
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-[#4a7fd9]/50" aria-hidden="true" /> 구간별 신규 응답
+        <span className="inline-flex items-center gap-2">
+          <span className="size-3 rounded-sm bg-[#356bc9]/50" aria-hidden="true" /> 구간별 신규 응답
         </span>
       </div>
     </div>

@@ -13,6 +13,7 @@ import { api, demoStore } from '../lib/api';
 import { listAllVoiceAnswers, type VoiceAnswer } from '../lib/interviewAudio';
 import { exportTextSummaryCsv } from '../lib/researchCsv';
 import type { Person } from '../lib/research';
+import { saasUi } from './ResearchUI';
 
 export type SummaryStyle = 'concise' | 'bullet' | 'action';
 
@@ -186,19 +187,16 @@ export function TextSummarizer({
       ? Math.max(0, Math.round(((result.originalChars - result.summaryChars) / result.originalChars) * 100))
       : 0;
 
-  const inputClass =
-    'w-full rounded-lg border border-[#dfdce9] bg-white px-3 py-2 text-sm font-normal text-[#22213a] hover:border-[#b9b0da] focus:border-[#5b3df5]';
-
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-2.5">
-        <div className="flex items-start gap-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eee8ff] text-[#5b3df5]">
-            <FileText size={18} aria-hidden="true" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+            <FileText size={20} aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-bold text-[#22213a]">AI 텍스트 요약</h3>
-            <p className="text-[13px] text-[#62627a]">
+            <h3 className={saasUi.sectionTitle}>AI 텍스트 요약</h3>
+            <p className="mt-0.5 text-[15px] leading-relaxed text-[#565570]">
               긴 인터뷰 녹취록, STT 텍스트, 서술형 설문 응답을 원하는 형식으로 빠르게 압축 정리해요.
             </p>
           </div>
@@ -206,13 +204,13 @@ export function TextSummarizer({
       </div>
 
       {/* Quick Loaders */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e8ddfb] bg-[#faf7ff] px-3.5 py-2.5">
-        <span className="text-xs font-bold text-[#4d30cf]">빠른 불러오기</span>
+      <div className={`flex flex-wrap items-center gap-2.5 ${saasUi.cardSoft} px-4 py-3`}>
+        <span className="text-[14px] font-bold text-[#4125cc]">빠른 불러오기</span>
         {(peopleWithNotes.length > 0 || unsyncedVoice.length > 0) && (
           <button
             type="button"
             onClick={loadAllCollected}
-            className="inline-flex min-h-8 items-center rounded-lg border border-[#d8cef7] bg-white px-2.5 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee8ff]"
+            className={saasUi.btnCompactSoft}
           >
             수집된 인터뷰 전체 ({peopleWithNotes.length + unsyncedVoice.length}건)
           </button>
@@ -222,7 +220,7 @@ export function TextSummarizer({
             aria-label="특정 대상자 인터뷰 기록 불러오기"
             value=""
             onChange={(e) => loadFromPerson(e.target.value)}
-            className="min-h-8 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs text-[#22213a]"
+            className="min-h-10 rounded-xl border border-[#dcd8e8] bg-white px-3 text-[14px] text-[#17162b]"
           >
             <option value="">대상자 기록 선택…</option>
             {peopleWithNotes.map((p) => (
@@ -239,29 +237,29 @@ export function TextSummarizer({
             setText(sampleInterviewText);
             setError('');
           }}
-          className="text-xs font-bold text-[#5b3df5] hover:underline"
+          className="min-h-10 px-2 text-[14px] font-bold text-[#4c2ee6] hover:underline"
         >
           예시 녹취록 채우기
         </button>
       </div>
 
-      <form className="grid gap-3" onSubmit={runSummarize}>
-        <fieldset disabled={busy} className="grid gap-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-1 text-[13px] font-semibold text-[#22213a]">
+      <form className="grid gap-4" onSubmit={runSummarize}>
+        <fieldset disabled={busy} className="grid gap-4">
+          <div className="grid gap-3.5 sm:grid-cols-2">
+            <label className={saasUi.labelText}>
               제목 / 대상 (선택)
               <input
                 value={title}
                 maxLength={120}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="예: 김OO 1차 고객 인터뷰"
-                className={inputClass}
+                className={saasUi.input}
               />
             </label>
 
-            <div className="grid gap-1">
-              <span className="text-[13px] font-semibold text-[#22213a]">요약 형식</span>
-              <div className="flex flex-wrap items-center gap-1" role="tablist" aria-label="요약 형식 선택">
+            <div className="grid gap-1.5">
+              <span className="text-[14px] font-bold text-[#17162b] sm:text-[15px]">요약 형식</span>
+              <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="요약 형식 선택">
                 {styleOptions.map((opt) => (
                   <button
                     key={opt.id}
@@ -270,10 +268,10 @@ export function TextSummarizer({
                     title={opt.desc}
                     aria-selected={style === opt.id}
                     onClick={() => setStyle(opt.id)}
-                    className={`min-h-9 shrink-0 whitespace-nowrap rounded-lg border px-2.5 text-xs font-semibold transition-colors ${
+                    className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-3 text-[14px] font-semibold transition-colors ${
                       style === opt.id
-                        ? 'border-[#5b3df5] bg-[#eee8ff] text-[#4d30cf]'
-                        : 'border-[#dfdce9] bg-white text-[#54546d] hover:border-[#cfc1f3]'
+                        ? 'border-[#4c2ee6] bg-[#efeaff] text-[#4125cc]'
+                        : 'border-[#dcd8e8] bg-white text-[#44435c] hover:border-[#b9b1d4]'
                     }`}
                   >
                     {opt.label}
@@ -283,18 +281,18 @@ export function TextSummarizer({
             </div>
           </div>
 
-          <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
+          <label className={saasUi.labelText}>
             <div className="flex items-center justify-between gap-2">
               <span>요약할 원문 텍스트 *</span>
-              <div className="flex items-center gap-2.5 text-xs font-normal text-[#62627a]">
+              <div className="flex items-center gap-3 text-[13px] font-normal text-[#565570]">
                 <span className="tnum font-mono">{text.trim().length.toLocaleString()} / 15,000자</span>
                 {text && (
                   <button
                     type="button"
                     onClick={() => setText('')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#62627a] hover:text-[#a6214e]"
+                    className="inline-flex items-center gap-1 text-[13px] font-bold text-[#565570] hover:text-[#b01e4a]"
                   >
-                    <Trash2 size={12} aria-hidden="true" /> 비우기
+                    <Trash2 size={14} aria-hidden="true" /> 비우기
                   </button>
                 )}
               </div>
@@ -306,7 +304,7 @@ export function TextSummarizer({
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="인터뷰 녹취록, STT 변환 텍스트, 설문 서술형 응답 모음 등 요약하고 싶은 텍스트를 붙여넣으세요."
-              className={`${inputClass} resize-y leading-relaxed`}
+              className={`${saasUi.input} resize-y leading-relaxed`}
             />
           </label>
         </fieldset>
@@ -314,15 +312,15 @@ export function TextSummarizer({
         {error && (
           <div
             role="alert"
-            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#f5c7d3] bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f5c7d3] bg-[#fff0f3] px-4 py-3 text-[15px] text-[#9f1d45]"
           >
             <span>{error}</span>
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex min-h-8 items-center gap-1 rounded-md border border-[#e6a4b7] bg-white px-2.5 text-xs font-bold text-[#9a2148] hover:bg-[#fff8fa]"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e6a4b7] bg-white px-3 text-[14px] font-bold text-[#9f1d45] hover:bg-[#fff8fa]"
             >
-              <RotateCcw size={12} aria-hidden="true" /> 다시 시도
+              <RotateCcw size={14} aria-hidden="true" /> 다시 시도
             </button>
           </div>
         )}
@@ -331,55 +329,55 @@ export function TextSummarizer({
           <button
             type="submit"
             disabled={busy || text.trim().length < 15}
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+            className={saasUi.btnPrimary}
           >
-            <Sparkles size={15} aria-hidden="true" />
+            <Sparkles size={16} aria-hidden="true" />
             {busy ? 'AI가 핵심을 요약하는 중…' : 'AI 텍스트 요약하기'}
           </button>
         </div>
       </form>
 
       {!busy && notice && (
-        <p className="rounded-lg bg-[#eee9ff] px-3 py-2 text-xs font-medium text-[#4d30cf]" role="status">
+        <p className="rounded-xl bg-[#f4f0ff] px-4 py-3 text-[14px] font-semibold text-[#4125cc]" role="status">
           {notice}
         </p>
       )}
 
       {result && (
-        <section className="grid gap-3.5 rounded-xl border border-[#e8ddfb] bg-white p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#efedf6] pb-3">
-            <b className="text-sm font-bold text-[#4d30cf]">
+        <section className={`grid gap-4 ${saasUi.card} p-5`}>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e6e3f0] pb-3.5">
+            <b className="text-[16px] font-bold text-[#4125cc]">
               {styleOptions.find((s) => s.id === result.style)?.label ?? '요약 결과'}
             </b>
-            <span className="tnum text-xs text-[#62627a]">
+            <span className="tnum text-[14px] text-[#565570]">
               원문 {result.originalChars.toLocaleString()}자 → 요약 {result.summaryChars.toLocaleString()}자 ·{' '}
-              <b className="font-semibold text-[#14674d]">{compressionPct}% 압축</b>
+              <b className="font-bold text-[#14674d]">{compressionPct}% 압축</b>
             </span>
           </div>
 
-          <div className="rounded-lg border border-[#efedf6] bg-[#faf8ff] px-3.5 py-2.5">
-            <span className="text-[11px] font-bold text-[#4d30cf]">한 줄 핵심 결론</span>
-            <p className="mt-0.5 text-sm font-bold text-[#22213a]">{result.headline}</p>
+          <div className="rounded-xl border border-[#e4dcfb] bg-[#f8f6ff] px-4 py-3.5">
+            <span className="text-[13px] font-bold text-[#4125cc]">한 줄 핵심 결론</span>
+            <p className="mt-1 text-[16px] font-bold text-[#17162b]">{result.headline}</p>
           </div>
 
-          <div className="grid gap-1">
-            <span className="text-xs font-bold text-[#62627a]">요약 본문</span>
-            <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#22213a]">{result.summary}</p>
+          <div className="grid gap-1.5">
+            <span className="text-[14px] font-bold text-[#565570]">요약 본문</span>
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[#17162b]">{result.summary}</p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-1.5 content-start">
-              <span className="text-xs font-bold text-[#4d30cf]">핵심 포인트</span>
-              <ul className="list-disc space-y-1 pl-4 text-[13px] text-[#22213a]">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid content-start gap-2">
+              <span className="text-[14px] font-bold text-[#4125cc]">핵심 포인트</span>
+              <ul className="list-disc space-y-1.5 pl-5 text-[15px] leading-relaxed text-[#17162b]">
                 {result.keyPoints.map((kp, idx) => (
                   <li key={idx}>{kp}</li>
                 ))}
               </ul>
             </div>
 
-            <div className="grid gap-1.5 content-start">
-              <span className="text-xs font-bold text-[#4d30cf]">후속 검증 · 실행 제안</span>
-              <ul className="list-disc space-y-1 pl-4 text-[13px] text-[#22213a]">
+            <div className="grid content-start gap-2">
+              <span className="text-[14px] font-bold text-[#4125cc]">후속 검증 · 실행 제안</span>
+              <ul className="list-disc space-y-1.5 pl-5 text-[15px] leading-relaxed text-[#17162b]">
                 {result.actionItems.map((act, idx) => (
                   <li key={idx}>{act}</li>
                 ))}
@@ -388,24 +386,24 @@ export function TextSummarizer({
           </div>
 
           {result.keywords.length > 0 && (
-            <p className="text-xs text-[#62627a]">
-              <b className="font-semibold text-[#22213a]">핵심 키워드:</b> {result.keywords.join(' · ')}
+            <p className="text-[14px] text-[#565570]">
+              <b className="font-bold text-[#17162b]">핵심 키워드:</b> {result.keywords.join(' · ')}
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2.5 pt-1">
             <button
               type="button"
               onClick={() => void copySummary()}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+              className={saasUi.btnCompactSecondary}
             >
               {copied ? (
                 <>
-                  <Check size={14} className="text-[#14674d]" aria-hidden="true" /> 복사됨
+                  <Check size={15} className="text-[#14674d]" aria-hidden="true" /> 복사됨
                 </>
               ) : (
                 <>
-                  <Copy size={14} aria-hidden="true" /> 요약 결과 복사
+                  <Copy size={15} aria-hidden="true" /> 요약 결과 복사
                 </>
               )}
             </button>
@@ -415,18 +413,18 @@ export function TextSummarizer({
                 const file = exportTextSummaryCsv(result, title);
                 setNotice(`텍스트 요약 결과를 CSV(${file})로 다운로드했어요.`);
               }}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+              className={saasUi.btnCompactSecondary}
             >
-              <Download size={14} aria-hidden="true" /> 요약 CSV
+              <Download size={15} aria-hidden="true" /> 요약 CSV
             </button>
 
             {onSaveSummary && people.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
                 <select
                   aria-label="요약을 저장할 대상자 선택"
                   value={targetPersonId}
                   onChange={(e) => setTargetPersonId(e.target.value)}
-                  className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs text-[#22213a]"
+                  className="min-h-10 rounded-xl border border-[#dcd8e8] bg-white px-3 text-[14px] text-[#17162b]"
                 >
                   <option value="">대상자 기록에 반영할 사람 선택</option>
                   {people.map((p) => (
@@ -443,9 +441,9 @@ export function TextSummarizer({
                     onSaveSummary(targetPersonId, formatSummaryPlain(result));
                     setNotice('선택한 대상자의 인터뷰 기록에 요약 내용을 추가했어요.');
                   }}
-                  className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-[#5b3df5] px-3 text-xs font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-45"
+                  className={saasUi.btnCompactPrimary}
                 >
-                  <CheckCircle2 size={14} aria-hidden="true" /> 기록에 저장
+                  <CheckCircle2 size={15} aria-hidden="true" /> 기록에 저장
                 </button>
               </div>
             )}

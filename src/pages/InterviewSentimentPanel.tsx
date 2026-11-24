@@ -14,6 +14,7 @@ import { api, demoStore } from '../lib/api';
 import { listAllVoiceAnswers, type VoiceAnswer } from '../lib/interviewAudio';
 import { exportSentimentTrendCsv } from '../lib/researchCsv';
 import type { Person } from '../lib/research';
+import { saasUi } from './ResearchUI';
 
 export interface SentimentPoint {
   index: number;
@@ -69,17 +70,17 @@ function useContainerWidth(ref: React.RefObject<HTMLDivElement | null>, fallback
 }
 
 function pointColor(label: SentimentPoint['emotionLabel'], score: number): string {
-  if (label === '긍정' || score >= 20) return '#1f8a65';
-  if (label === '부정' || score <= -20) return '#a6214e';
+  if (label === '긍정' || score >= 20) return '#19825f';
+  if (label === '부정' || score <= -20) return '#b01e4a';
   if (label === '복합') return '#d97724';
-  return '#5b3df5';
+  return '#4c2ee6';
 }
 
 function emotionTextClass(label: SentimentPoint['emotionLabel'], score: number): string {
   if (label === '긍정' || score >= 20) return 'text-[#14674d]';
-  if (label === '부정' || score <= -20) return 'text-[#a6214e]';
+  if (label === '부정' || score <= -20) return 'text-[#9f1d45]';
   if (label === '복합') return 'text-[#8b4d17]';
-  return 'text-[#4d30cf]';
+  return 'text-[#4125cc]';
 }
 
 function truncateLabel(text: string, maxLen: number): string {
@@ -236,8 +237,8 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
 
     const points = result.points;
     const width = Math.max(320, chartWidth);
-    const height = 270;
-    const margin = { top: 24, right: 24, bottom: 48, left: 46 };
+    const height = 286;
+    const margin = { top: 26, right: 26, bottom: 52, left: 54 };
     const innerW = width - margin.left - margin.right;
     const innerH = height - margin.top - margin.bottom;
 
@@ -272,29 +273,29 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
       g.selectAll('text.y-label')
         .data(ticks)
         .join('text')
-        .attr('x', -8)
+        .attr('x', -10)
         .attr('y', (d) => y(d) + 4)
         .attr('text-anchor', 'end')
-        .attr('font-size', 11)
+        .attr('font-size', 13)
         .attr('font-family', 'ui-monospace, monospace')
-        .attr('fill', (d) => (d > 0 ? '#14674d' : d < 0 ? '#a6214e' : '#62627a'))
+        .attr('fill', (d) => (d > 0 ? '#14674d' : d < 0 ? '#9f1d45' : '#565570'))
         .text((d) => (d > 0 ? `+${d}` : String(d)));
 
       // Positive / negative region labels
       g.append('text')
-        .attr('x', 6)
-        .attr('y', 14)
-        .attr('font-size', 10)
+        .attr('x', 8)
+        .attr('y', 15)
+        .attr('font-size', 12)
         .attr('font-weight', 700)
-        .attr('fill', '#1f8a65')
+        .attr('fill', '#19825f')
         .text('긍정 영역 (+)');
 
       g.append('text')
-        .attr('x', 6)
-        .attr('y', innerH - 6)
-        .attr('font-size', 10)
+        .attr('x', 8)
+        .attr('y', innerH - 7)
+        .attr('font-size', 12)
         .attr('font-weight', 700)
-        .attr('fill', '#a6214e')
+        .attr('fill', '#b01e4a')
         .text('부정 영역 (-)');
 
       // Clip paths for diverging positive/negative area fills
@@ -349,7 +350,7 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
       g.append('path')
         .datum(points)
         .attr('fill', 'none')
-        .attr('stroke', '#5b3df5')
+        .attr('stroke', '#4c2ee6')
         .attr('stroke-width', 2.5)
         .attr('d', line);
 
@@ -371,8 +372,8 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
 
       nodes
         .append('circle')
-        .attr('r', (_d, i) => (i === activeIdx ? 11 : 0))
-        .attr('fill', 'rgba(91, 61, 245, 0.15)');
+        .attr('r', (_d, i) => (i === activeIdx ? 12 : 0))
+        .attr('fill', 'rgba(76, 46, 230, 0.15)');
 
       nodes
         .append('circle')
@@ -383,9 +384,9 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
 
       nodes
         .append('text')
-        .attr('y', (d) => (d.sentimentScore >= 0 ? -12 : 18))
+        .attr('y', (d) => (d.sentimentScore >= 0 ? -13 : 20))
         .attr('text-anchor', 'middle')
-        .attr('font-size', 10)
+        .attr('font-size', 12)
         .attr('font-weight', 700)
         .attr('font-family', 'ui-monospace, monospace')
         .attr('fill', (d) => pointColor(d.emotionLabel, d.sentimentScore))
@@ -397,11 +398,11 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
         .data(points)
         .join('text')
         .attr('x', (_d, i) => x(i) ?? 0)
-        .attr('y', innerH + 20)
+        .attr('y', innerH + 22)
         .attr('text-anchor', 'middle')
-        .attr('font-size', 11)
+        .attr('font-size', 13)
         .attr('font-weight', (_d, i) => (i === activeIdx ? 700 : 500))
-        .attr('fill', (_d, i) => (i === activeIdx ? '#4d30cf' : '#62627a'))
+        .attr('fill', (_d, i) => (i === activeIdx ? '#4125cc' : '#565570'))
         .text((d) => truncateLabel(d.label, maxChars));
     } else {
       // Stacked Positive / Neutral / Negative ratio bars per segment
@@ -423,12 +424,12 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
           .attr('stroke-width', 1);
 
         g.append('text')
-          .attr('x', -8)
+          .attr('x', -10)
           .attr('y', y(tick) + 4)
           .attr('text-anchor', 'end')
-          .attr('font-size', 11)
+          .attr('font-size', 13)
           .attr('font-family', 'ui-monospace, monospace')
-          .attr('fill', '#62627a')
+          .attr('fill', '#565570')
           .text(`${tick}%`);
       });
 
@@ -458,7 +459,7 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
         .attr('height', innerH + 6)
         .attr('rx', 6)
         .attr('fill', 'none')
-        .attr('stroke', (_d, i) => (i === activeIdx ? '#5b3df5' : 'transparent'))
+        .attr('stroke', (_d, i) => (i === activeIdx ? '#4c2ee6' : 'transparent'))
         .attr('stroke-width', 1.5);
 
       // Positive bottom
@@ -468,7 +469,7 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
         .attr('y', (d) => y(d.positiveRatio))
         .attr('width', bw)
         .attr('height', (d) => Math.max(0, innerH - y(d.positiveRatio)))
-        .attr('fill', '#1f8a65');
+        .attr('fill', '#19825f');
 
       // Neutral middle
       groups
@@ -486,18 +487,18 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
         .attr('y', 0)
         .attr('width', bw)
         .attr('height', (d) => Math.max(0, y(d.positiveRatio + d.neutralRatio)))
-        .attr('fill', '#a6214e');
+        .attr('fill', '#b01e4a');
 
       const maxChars = points.length > 8 ? 8 : 12;
       g.selectAll('text.x-label')
         .data(points)
         .join('text')
         .attr('x', (_d, i) => (x(i) ?? 0) + bw / 2)
-        .attr('y', innerH + 20)
+        .attr('y', innerH + 22)
         .attr('text-anchor', 'middle')
-        .attr('font-size', 11)
+        .attr('font-size', 13)
         .attr('font-weight', (_d, i) => (i === activeIdx ? 700 : 500))
-        .attr('fill', (_d, i) => (i === activeIdx ? '#4d30cf' : '#62627a'))
+        .attr('fill', (_d, i) => (i === activeIdx ? '#4125cc' : '#565570'))
         .text((d) => truncateLabel(d.label, maxChars));
     }
   }, [result, chartWidth, chartView, activeIdx, scope]);
@@ -507,16 +508,16 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
   return (
     <section
       aria-label="고객 감정 추이 시각화"
-      className="grid gap-4 rounded-2xl border border-[#e2d5fd] bg-white p-5"
+      className={`${saasUi.card} grid gap-5 p-5 sm:p-6`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eee8ff] text-[#5b3df5]">
-            <Activity size={18} aria-hidden="true" />
+        <div className="flex items-start gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+            <Activity size={20} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="font-display text-lg font-bold text-[#22213a]">고객 감정 추이 시각화</h2>
-            <p className="text-[13px] text-[#62627a]">
+            <h2 className={saasUi.sectionTitle}>고객 감정 추이 시각화</h2>
+            <p className="mt-0.5 text-[15px] leading-relaxed text-[#565570]">
               수집된 인터뷰 텍스트(음성 STT · 인사이트 메모)를 분석해 긍정·부정 감정 변화를 그래프로 추적해요.
             </p>
           </div>
@@ -530,7 +531,7 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
               setScope(e.target.value);
               setError('');
             }}
-            className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-3 text-xs font-medium text-[#22213a]"
+            className="min-h-10 rounded-xl border border-[#dcd8e8] bg-white px-3.5 text-[14px] font-medium text-[#17162b] hover:border-[#b9b1d4] focus:border-[#4c2ee6] focus:outline-none"
           >
             <option value="all">전체 인터뷰 통합 추이 ({collectedEntries.length}명)</option>
             {collectedEntries.map((entry) => (
@@ -544,9 +545,9 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
             type="button"
             disabled={busy || scopedEntries.length === 0}
             onClick={() => void runAnalysis()}
-            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-3.5 text-xs font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+            className={saasUi.btnCompactPrimary}
           >
-            <Sparkles size={14} aria-hidden="true" />
+            <Sparkles size={15} aria-hidden="true" />
             {busy ? '감정 추이 분석 중…' : result ? '감정 추이 다시 분석' : '감정 추이 분석하기'}
           </button>
 
@@ -554,9 +555,9 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
             <button
               type="button"
               onClick={() => exportSentimentTrendCsv(result)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+              className={saasUi.btnCompactSecondary}
             >
-              <Download size={14} aria-hidden="true" /> 감정 추이 CSV
+              <Download size={15} aria-hidden="true" /> 감정 추이 CSV
             </button>
           )}
         </div>
@@ -565,22 +566,22 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
       {error && (
         <div
           role="alert"
-          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#f5c7d3] bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]"
         >
           <span>{error}</span>
           <button
             type="button"
             disabled={busy}
             onClick={() => void runAnalysis()}
-            className="inline-flex min-h-8 items-center gap-1 rounded-md border border-[#e6a4b7] bg-white px-2.5 text-xs font-bold text-[#9a2148] hover:bg-[#fff8fa]"
+            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#e6a4b7] bg-white px-3 text-[13px] font-bold text-[#9f1d45] hover:bg-[#fff8fa]"
           >
-            <RotateCcw size={12} aria-hidden="true" /> 다시 시도
+            <RotateCcw size={13} aria-hidden="true" /> 다시 시도
           </button>
         </div>
       )}
 
       {isStale && result && !busy && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#e5dcfc] bg-[#faf7ff] px-3 py-2 text-xs text-[#4d30cf]">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] px-4 py-2.5 text-[14px] text-[#4125cc]">
           <span>새로운 인터뷰 기록이 반영되었어요. 최신 텍스트 기준으로 다시 분석할 수 있어요.</span>
           <button
             type="button"
@@ -593,68 +594,68 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
       )}
 
       {!result && !busy ? (
-        <div className="grid justify-items-center gap-2.5 rounded-xl border border-dashed border-[#d8d3ea] bg-[#faf9fd] px-5 py-8 text-center">
-          <p className="text-sm font-semibold text-[#22213a]">
+        <div className="grid justify-items-center gap-2.5 rounded-xl border border-dashed border-[#d8d3ea] bg-[#faf9fd] px-6 py-9 text-center">
+          <p className="text-[16px] font-bold text-[#17162b]">
             {scopedEntries.length > 0
               ? `분석 가능한 인터뷰 텍스트 ${scopedEntries.length}건이 준비되어 있어요`
               : '아직 분석할 인터뷰 텍스트가 없어요'}
           </p>
-          <p className="max-w-lg text-xs text-[#62627a]">
+          <p className="max-w-lg text-[14px] leading-relaxed text-[#565570]">
             {scopedEntries.length > 0
               ? "'감정 추이 분석하기' 버튼을 누르면 인터뷰 흐름에 따른 긍정·부정 감정 점수 곡선과 감정 변곡점을 D3 그래프로 시각화해 드려요."
               : '실시간 음성 녹음(STT)을 진행하거나 대상자의 핵심 인사이트 메모를 기록하면 감정 추이를 그래프로 분석할 수 있어요.'}
           </p>
         </div>
       ) : busy && !result ? (
-        <p className="rounded-xl border border-[#efedf6] bg-[#faf9fd] px-4 py-8 text-center text-sm font-medium text-[#4d30cf]" role="status">
+        <p className="rounded-xl border border-[#e6e3f0] bg-[#faf9fd] px-5 py-9 text-center text-[16px] font-semibold text-[#4125cc]" role="status">
           인터뷰 발화의 긍정·부정 감정 점수 변화와 변곡점을 추출하고 있어요…
         </p>
       ) : (
         result && (
-          <div className="grid gap-4">
+          <div className="grid gap-5">
             {/* 4-Metric Summary Strip */}
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-xl border border-[#efedf6] bg-[#faf9fd] px-3.5 py-3">
-                <span className="text-xs font-medium text-[#62627a]">평균 감성 지수</span>
+            <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+              <div className="rounded-xl border border-[#e6e3f0] bg-[#faf9fd] px-4 py-3.5">
+                <span className="text-[14px] font-semibold text-[#565570]">평균 감성 지수</span>
                 <div
-                  className={`tnum mt-1 font-display text-2xl font-extrabold ${
+                  className={`tnum mt-1 font-display text-[28px] font-extrabold ${
                     result.overallScore >= 15
                       ? 'text-[#14674d]'
                       : result.overallScore <= -15
-                      ? 'text-[#a6214e]'
-                      : 'text-[#22213a]'
+                      ? 'text-[#b01e4a]'
+                      : 'text-[#17162b]'
                   }`}
                 >
                   {result.overallScore > 0 ? `+${result.overallScore}` : result.overallScore}
-                  <small className="ml-1 text-xs font-semibold text-[#62627a]">/ 100</small>
+                  <small className="ml-1 text-[14px] font-semibold text-[#565570]">/ 100</small>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#efedf6] bg-[#faf9fd] px-3.5 py-3">
-                <span className="text-xs font-medium text-[#62627a]">긍정 발화 비중</span>
-                <div className="tnum mt-1 font-display text-2xl font-extrabold text-[#14674d]">
+              <div className="rounded-xl border border-[#e6e3f0] bg-[#faf9fd] px-4 py-3.5">
+                <span className="text-[14px] font-semibold text-[#565570]">긍정 발화 비중</span>
+                <div className="tnum mt-1 font-display text-[28px] font-extrabold text-[#14674d]">
                   {result.positiveShare}
-                  <small className="ml-0.5 text-xs font-semibold text-[#62627a]">%</small>
+                  <small className="ml-0.5 text-[14px] font-semibold text-[#565570]">%</small>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#efedf6] bg-[#faf9fd] px-3.5 py-3">
-                <span className="text-xs font-medium text-[#62627a]">부정·불만 비중</span>
-                <div className="tnum mt-1 font-display text-2xl font-extrabold text-[#a6214e]">
+              <div className="rounded-xl border border-[#e6e3f0] bg-[#faf9fd] px-4 py-3.5">
+                <span className="text-[14px] font-semibold text-[#565570]">부정·불만 비중</span>
+                <div className="tnum mt-1 font-display text-[28px] font-extrabold text-[#b01e4a]">
                   {result.negativeShare}
-                  <small className="ml-0.5 text-xs font-semibold text-[#62627a]">%</small>
+                  <small className="ml-0.5 text-[14px] font-semibold text-[#565570]">%</small>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#efedf6] bg-[#faf9fd] px-3.5 py-3">
-                <span className="text-xs font-medium text-[#62627a]">감정 변화 추세</span>
-                <div className="mt-1 flex items-center gap-1.5 font-display text-xl font-extrabold text-[#22213a]">
+              <div className="rounded-xl border border-[#e6e3f0] bg-[#faf9fd] px-4 py-3.5">
+                <span className="text-[14px] font-semibold text-[#565570]">감정 변화 추세</span>
+                <div className="mt-1 flex items-center gap-1.5 font-display text-[24px] font-extrabold text-[#17162b]">
                   {result.trendDirection === '상승' ? (
-                    <TrendingUp size={19} className="text-[#14674d]" aria-hidden="true" />
+                    <TrendingUp size={21} className="text-[#14674d]" aria-hidden="true" />
                   ) : result.trendDirection === '하락' ? (
-                    <TrendingDown size={19} className="text-[#a6214e]" aria-hidden="true" />
+                    <TrendingDown size={21} className="text-[#b01e4a]" aria-hidden="true" />
                   ) : (
-                    <Activity size={19} className="text-[#5b3df5]" aria-hidden="true" />
+                    <Activity size={21} className="text-[#4c2ee6]" aria-hidden="true" />
                   )}
                   <span>{result.trendDirection}</span>
                 </div>
@@ -662,51 +663,51 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
             </div>
 
             {/* Chart Header & View Toggle */}
-            <div className="grid gap-3 rounded-xl border border-[#e9e7f1] p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="grid gap-3.5 rounded-xl border border-[#e4e1ef] p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2.5">
                 <div>
-                  <h3 className="text-sm font-bold text-[#22213a]">{result.scopeTitle} · 감정 변화 그래프</h3>
-                  <p className="text-xs text-[#62627a]">
+                  <h3 className="text-[16px] font-bold text-[#17162b]">{result.scopeTitle} · 감정 변화 그래프</h3>
+                  <p className="text-[14px] text-[#565570]">
                     각 지점을 클릭하거나 마우스를 올리면 해당 발화 인용과 감정 유발 요인을 확인할 수 있어요.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 rounded-lg border border-[#e6e3f0] bg-[#faf9fd] p-1" role="tablist">
+                <div className="flex items-center gap-1 rounded-xl border border-[#e6e3f0] bg-[#faf9fd] p-1" role="tablist">
                   <button
                     type="button"
                     role="tab"
                     aria-selected={chartView === 'line'}
                     onClick={() => setChartView('line')}
-                    className={`inline-flex min-h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-2.5 text-xs font-semibold ${
-                      chartView === 'line' ? 'bg-[#5b3df5] text-white' : 'text-[#54546d] hover:text-[#22213a]'
+                    className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[14px] font-semibold ${
+                      chartView === 'line' ? 'bg-[#4c2ee6] text-white' : 'text-[#44435c] hover:text-[#17162b]'
                     }`}
                   >
-                    <Activity size={13} aria-hidden="true" /> 감정 추이 곡선
+                    <Activity size={14} aria-hidden="true" /> 감정 추이 곡선
                   </button>
                   <button
                     type="button"
                     role="tab"
                     aria-selected={chartView === 'ratio'}
                     onClick={() => setChartView('ratio')}
-                    className={`inline-flex min-h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-2.5 text-xs font-semibold ${
-                      chartView === 'ratio' ? 'bg-[#5b3df5] text-white' : 'text-[#54546d] hover:text-[#22213a]'
+                    className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[14px] font-semibold ${
+                      chartView === 'ratio' ? 'bg-[#4c2ee6] text-white' : 'text-[#44435c] hover:text-[#17162b]'
                     }`}
                   >
-                    <BarChart3 size={13} aria-hidden="true" /> 긍정·부정 비율
+                    <BarChart3 size={14} aria-hidden="true" /> 긍정·부정 비율
                   </button>
                 </div>
               </div>
 
               {chartView === 'ratio' && (
-                <div className="flex flex-wrap items-center gap-4 text-xs text-[#62627a]">
+                <div className="flex flex-wrap items-center gap-4 text-[14px] text-[#565570]">
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-sm bg-[#1f8a65]" aria-hidden="true" /> 긍정
+                    <span className="size-3 rounded-sm bg-[#19825f]" aria-hidden="true" /> 긍정
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-sm bg-[#d5d0e8]" aria-hidden="true" /> 중립
+                    <span className="size-3 rounded-sm bg-[#d5d0e8]" aria-hidden="true" /> 중립
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="size-2.5 rounded-sm bg-[#a6214e]" aria-hidden="true" /> 부정
+                    <span className="size-3 rounded-sm bg-[#b01e4a]" aria-hidden="true" /> 부정
                   </span>
                 </div>
               )}
@@ -716,43 +717,43 @@ export function InterviewSentimentPanel({ people }: { people: Person[] }) {
               </div>
 
               {selectedPoint && (
-                <div className="grid gap-1.5 rounded-lg border border-[#e5dcfc] bg-[#faf7ff] px-3.5 py-3 text-[13px]">
+                <div className="grid gap-2 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] px-4 py-3.5 text-[15px]">
                   <div className="tnum flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <b className="text-sm text-[#22213a]">{selectedPoint.label}</b>
-                      <span className="text-[#62627a]">· {selectedPoint.speaker}</span>
+                    <div className="flex flex-wrap items-center gap-2 text-[14px]">
+                      <b className="text-[16px] text-[#17162b]">{selectedPoint.label}</b>
+                      <span className="text-[#565570]">· {selectedPoint.speaker}</span>
                       <span className={`font-bold ${emotionTextClass(selectedPoint.emotionLabel, selectedPoint.sentimentScore)}`}>
                         · {selectedPoint.emotionLabel} (
                         {selectedPoint.sentimentScore > 0 ? `+${selectedPoint.sentimentScore}` : selectedPoint.sentimentScore}점)
                       </span>
                     </div>
-                    <span className="font-mono text-[11px] text-[#62627a]">
+                    <span className="font-mono text-[13px] text-[#565570]">
                       긍정 {selectedPoint.positiveRatio}% · 중립 {selectedPoint.neutralRatio}% · 부정 {selectedPoint.negativeRatio}%
                     </span>
                   </div>
-                  <p className="flex items-start gap-1.5 font-medium text-[#22213a]">
-                    <MessageSquareQuote size={15} className="mt-0.5 shrink-0 text-[#5b3df5]" aria-hidden="true" />
+                  <p className="flex items-start gap-2 font-medium text-[#17162b]">
+                    <MessageSquareQuote size={17} className="mt-0.5 shrink-0 text-[#4c2ee6]" aria-hidden="true" />
                     <span>&ldquo;{selectedPoint.excerpt}&rdquo;</span>
                   </p>
-                  <p className="text-xs text-[#54546d]">
-                    <b className="font-semibold text-[#4d30cf]">감정 요인:</b> {selectedPoint.trigger}
+                  <p className="text-[14px] text-[#44435c]">
+                    <b className="font-bold text-[#4125cc]">감정 요인:</b> {selectedPoint.trigger}
                   </p>
                 </div>
               )}
             </div>
 
             {/* Summary & Turning Points */}
-            <div className="grid gap-3 rounded-xl border border-[#efedf6] bg-[#faf8ff] p-4 text-[13px] md:grid-cols-2">
+            <div className="grid gap-4 rounded-xl border border-[#e6e3f0] bg-[#f8f6ff] p-4 sm:p-5 text-[15px] md:grid-cols-2">
               <div className="grid gap-1.5 content-start">
-                <b className="text-xs font-bold text-[#4d30cf]">전체 감정 흐름 요약</b>
-                <p className="leading-relaxed text-[#22213a]">{result.summary}</p>
-                <span className="tnum text-[11px] text-[#62627a]">
+                <b className="text-[14px] font-bold text-[#4125cc]">전체 감정 흐름 요약</b>
+                <p className="leading-relaxed text-[#17162b]">{result.summary}</p>
+                <span className="tnum text-[13px] text-[#565570]">
                   분석 시각: {result.analyzedAt.slice(0, 16).replace('T', ' ')}
                 </span>
               </div>
               <div className="grid gap-1.5 content-start">
-                <b className="text-xs font-bold text-[#4d30cf]">주요 감정 변곡점</b>
-                <ul className="list-disc space-y-1 pl-4 text-[#22213a]">
+                <b className="text-[14px] font-bold text-[#4125cc]">주요 감정 변곡점</b>
+                <ul className="list-disc space-y-1 pl-5 leading-relaxed text-[#17162b]">
                   {result.turningPoints.map((tp, idx) => (
                     <li key={idx}>{tp}</li>
                   ))}

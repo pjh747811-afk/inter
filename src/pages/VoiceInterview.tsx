@@ -27,7 +27,7 @@ import { interviewPrompts, type Person } from '../lib/research';
 import { exportVoiceAnswersCsv } from '../lib/researchCsv';
 import { isLiveSpeechSupported, startLiveSpeech, type LiveSpeechController } from '../lib/speechStt';
 import { webtoonInterview, webtoonTopic } from '../lib/webtoonValidation';
-import { Modal, saveBlob } from './ResearchUI';
+import { Modal, saasUi, saveBlob } from './ResearchUI';
 
 const limitSeconds = 30 * 60;
 const limitBytes = 18 * 1024 * 1024;
@@ -162,7 +162,7 @@ export function VoiceInterview({
               const barH = Math.max(4, Math.round((val / 255) * (h - 6)));
               const x = i * (barW + gap);
               const y = Math.round((h - barH) / 2);
-              g.fillStyle = val > 25 ? '#5b3df5' : '#cfc1f3';
+              g.fillStyle = val > 25 ? '#4c2ee6' : '#cfc5f3';
               g.fillRect(x, y, barW, barH);
             }
           }
@@ -547,32 +547,32 @@ export function VoiceInterview({
 
   return (
     <Modal title="실시간 음성 인터뷰 · 자동 STT" close={requestClose} wide>
-      <div className="grid gap-4">
+      <div className="grid gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f1edff] text-[#5b3df5]">
-              <AudioLines size={19} aria-hidden="true" />
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+              <AudioLines size={20} aria-hidden="true" />
             </span>
             <div>
-              <h3 className="text-base font-bold text-[#22213a]">{person.name}</h3>
-              <p className="text-[13px] text-[#62627a]">
+              <h3 className="text-[18px] font-bold text-[#17162b]">{person.name}</h3>
+              <p className="text-[14px] leading-relaxed text-[#565570]">
                 마이크로 인터뷰를 실시간 녹음하고, 음성을 텍스트(STT)로 변환해 기록 공간에 자동 저장해요.
               </p>
             </div>
           </div>
-          {person.desc && <span className="text-xs font-medium text-[#62627a]">{person.desc}</span>}
+          {person.desc && <span className="text-[14px] font-semibold text-[#565570]">{person.desc}</span>}
         </div>
 
         {confirm && (
-          <section className="grid gap-2 rounded-xl border border-[#f2d0d9] bg-[#fff5f7] p-3.5" aria-label="닫기 확인">
-            <b className="text-sm text-[#22213a]">저장하지 않고 닫을까요?</b>
-            <p className="text-[13px] text-[#62627a]">현재 녹음 중인 내용은 저장되지 않아요.</p>
+          <section className="grid gap-2.5 rounded-xl border border-[#f2ccd7] bg-[#fff5f7] p-4" aria-label="닫기 확인">
+            <b className="text-[16px] text-[#17162b]">저장하지 않고 닫을까요?</b>
+            <p className="text-[14px] text-[#565570]">현재 녹음 중인 내용은 저장되지 않아요.</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => setConfirm(null)}
-                className="min-h-9 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a]"
+                className={saasUi.btnCompactSecondary}
               >
                 계속하기
               </button>
@@ -580,7 +580,7 @@ export function VoiceInterview({
                 type="button"
                 disabled={busy}
                 onClick={accept}
-                className="min-h-9 rounded-lg bg-[#a6214e] px-3 text-xs font-semibold text-white"
+                className="inline-flex min-h-10 items-center rounded-xl bg-[#b01e4a] px-4 text-[14px] font-bold text-white hover:bg-[#93183d]"
               >
                 저장하지 않고 닫기
               </button>
@@ -588,9 +588,9 @@ export function VoiceInterview({
           </section>
         )}
 
-        <div className="grid gap-3 rounded-xl border border-[#e5dcfc] bg-[#faf8ff] p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
+        <div className={`${saasUi.cardSoft} grid gap-3.5 p-4 sm:p-5`}>
+          <div className="grid gap-3.5 sm:grid-cols-2">
+            <label className={saasUi.labelText}>
               인터뷰 질문 <span className="sr-only">(선택)</span>
               <input
                 name="voice-question"
@@ -600,10 +600,10 @@ export function VoiceInterview({
                 placeholder="질문을 직접 입력해도 돼요…"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="min-h-10 w-full rounded-lg border border-[#dfdce9] bg-white px-3 py-2 text-sm font-normal text-[#22213a]"
+                className={saasUi.input}
               />
             </label>
-            <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
+            <label className={saasUi.labelText}>
               추천 질문 불러오기
               <select
                 name="voice-prompt"
@@ -612,7 +612,7 @@ export function VoiceInterview({
                 onChange={(e) => {
                   if (e.target.value) setQuestion(e.target.value);
                 }}
-                className="min-h-10 w-full rounded-lg border border-[#dfdce9] bg-white px-3 py-2 text-sm font-normal text-[#22213a]"
+                className={saasUi.input}
               >
                 <option value="">질문 예시 선택</option>
                 {generated && (
@@ -643,8 +643,8 @@ export function VoiceInterview({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            <div className="flex items-center gap-2 text-[13px] font-bold text-[#4d30cf]" role="status">
-              {phase === 'recording' && <span className="size-2.5 animate-pulse rounded-full bg-[#a6214e]" aria-hidden="true" />}
+            <div className="flex items-center gap-2 text-[15px] font-bold text-[#4125cc]" role="status">
+              {phase === 'recording' && <span className="size-2.5 animate-pulse rounded-full bg-[#b01e4a]" aria-hidden="true" />}
               {phase === 'permission'
                 ? '마이크 권한을 기다리는 중…'
                 : phase === 'recording'
@@ -657,16 +657,16 @@ export function VoiceInterview({
                 ? '저장 전 녹음'
                 : '녹음 대기'}
             </div>
-            <div className="tnum font-mono text-2xl font-bold text-[#22213a]" aria-label="녹음 시간">
+            <div className="tnum font-mono text-[28px] font-bold text-[#17162b]" aria-label="녹음 시간">
               {clock(draft?.seconds ?? seconds)}
             </div>
           </div>
 
           {phase === 'recording' && (
-            <div className="grid gap-2.5 rounded-xl border border-[#dfd4fb] bg-white p-3">
+            <div className="grid gap-3 rounded-xl border border-[#dfd7fb] bg-white p-3.5">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold text-[#4d30cf]">마이크 입력 파형</span>
-                <span className="text-[11px] text-[#62627a]">
+                <span className="text-[13px] font-bold text-[#4125cc]">마이크 입력 파형</span>
+                <span className="text-[13px] text-[#565570]">
                   {liveSpeechActive
                     ? '실시간 자막 인식 중'
                     : liveSupported
@@ -681,14 +681,14 @@ export function VoiceInterview({
                 aria-hidden="true"
                 className="h-9 w-full rounded-lg bg-[#faf7ff]"
               />
-              <div className="min-h-14 rounded-lg border border-[#efedf6] bg-[#faf9fd] px-3 py-2 text-[13px] leading-relaxed text-[#22213a]">
+              <div className="min-h-14 rounded-lg border border-[#e6e3f0] bg-[#faf9fd] px-3.5 py-2.5 text-[15px] leading-relaxed text-[#17162b]">
                 {liveFinal || liveInterim ? (
                   <p>
                     <span>{liveFinal}</span>
                     {liveInterim && <span className="ml-1 text-[#736e8a]">{liveInterim}</span>}
                   </p>
                 ) : (
-                  <p className="text-xs text-[#62627a]">
+                  <p className="text-[14px] text-[#565570]">
                     {liveSpeechActive
                       ? '말씀하시면 실시간 텍스트가 여기에 표시되고, 녹음을 마치면 AI가 전체 문장을 정밀 변환해 저장해요.'
                       : '녹음이 진행 중이에요. 녹음을 끝내면 AI가 음성을 텍스트로 변환해 기록 공간에 자동으로 저장해요.'}
@@ -699,44 +699,44 @@ export function VoiceInterview({
           )}
 
           {phase === 'transcribing' && (
-            <div className="grid gap-1.5 rounded-xl border border-[#d8cef7] bg-white p-3 text-[13px] text-[#4d30cf]" role="status">
-              <div className="flex items-center gap-2 font-semibold">
-                <Sparkles size={15} className="animate-spin" aria-hidden="true" />
+            <div className="grid gap-1.5 rounded-xl border border-[#d6cbf8] bg-white p-3.5 text-[15px] text-[#4125cc]" role="status">
+              <div className="flex items-center gap-2 font-bold">
+                <Sparkles size={16} className="animate-spin" aria-hidden="true" />
                 녹음된 음성을 한국어 텍스트로 변환(STT)하고 인터뷰 기록 공간에 저장하고 있어요…
               </div>
               {(liveFinal || liveInterim) && (
-                <p className="text-xs text-[#62627a]">실시간 초안: {[liveFinal, liveInterim].filter(Boolean).join(' ')}</p>
+                <p className="text-[14px] text-[#565570]">실시간 초안: {[liveFinal, liveInterim].filter(Boolean).join(' ')}</p>
               )}
             </div>
           )}
 
           {!supported && (
-            <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+            <p className="rounded-xl bg-[#fff0f3] px-3.5 py-2.5 text-[14px] font-medium text-[#9f1d45]" role="alert">
               이 화면에서는 마이크를 사용할 수 없어요. 앱을 브라우저 탭에서 직접 열거나 최신 브라우저를 사용해 주세요.
             </p>
           )}
 
           {!recorderInUse && phase !== 'transcribing' && !draft && (
             <div className="grid gap-2.5">
-              <label className="flex min-h-8 items-center gap-2 text-[13px] font-medium text-[#22213a]">
+              <label className="flex min-h-9 items-center gap-2.5 text-[15px] font-semibold text-[#17162b]">
                 <input
                   type="checkbox"
                   name="recording-consent"
                   disabled={!supported || !!confirm}
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="size-4 accent-[#5b3df5]"
+                  className="size-4.5 accent-[#4c2ee6]"
                 />
                 참여자가 음성 녹음 및 텍스트 변환에 동의했어요.
               </label>
-              <label className="flex min-h-8 items-center gap-2 text-xs font-medium text-[#54546d]">
+              <label className="flex min-h-9 items-center gap-2.5 text-[14px] font-medium text-[#44435c]">
                 <input
                   type="checkbox"
                   name="auto-stt-save"
                   disabled={!supported || !!confirm}
                   checked={autoSttAndSave}
                   onChange={(e) => setAutoSttAndSave(e.target.checked)}
-                  className="size-4 accent-[#5b3df5]"
+                  className="size-4.5 accent-[#4c2ee6]"
                 />
                 녹음 종료 즉시 음성을 텍스트로 변환(STT)해 인터뷰 기록 공간에 자동 저장
               </label>
@@ -744,9 +744,9 @@ export function VoiceInterview({
                 type="button"
                 disabled={!supported || !consent || !!confirm}
                 onClick={() => void start()}
-                className="inline-flex min-h-10 w-fit items-center gap-2 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+                className={`${saasUi.btnPrimary} w-fit`}
               >
-                <Mic size={16} aria-hidden="true" /> 실시간 녹음 시작
+                <Mic size={17} aria-hidden="true" /> 실시간 녹음 시작
               </button>
             </div>
           )}
@@ -756,9 +756,9 @@ export function VoiceInterview({
               type="button"
               disabled={!!confirm}
               onClick={stop}
-              className="inline-flex min-h-10 w-fit items-center gap-2 rounded-lg bg-[#a6214e] px-4 text-sm font-semibold text-white hover:bg-[#8c1b41]"
+              className={`${saasUi.btnDanger} w-fit`}
             >
-              <Square size={14} aria-hidden="true" /> 녹음 끝내고 자동 변환·저장
+              <Square size={15} aria-hidden="true" /> 녹음 끝내고 자동 변환·저장
             </button>
           )}
 
@@ -770,18 +770,18 @@ export function VoiceInterview({
                 session.current++;
                 setPhase('idle');
               }}
-              className="min-h-10 w-fit rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a]"
+              className={`${saasUi.btnSecondary} w-fit`}
             >
               마이크 요청 취소
             </button>
           )}
 
           {draft && (
-            <div className="grid gap-2.5">
+            <div className="grid gap-3">
               <AudioPlayer answer={draft} />
               {draft.transcript && (
-                <div className="rounded-lg border border-[#efedf6] bg-white px-3 py-2 text-xs text-[#22213a]">
-                  <b className="text-[#4d30cf]">실시간 인식 초안:</b> {draft.transcript}
+                <div className="rounded-xl border border-[#e6e3f0] bg-white px-3.5 py-2.5 text-[14px] text-[#17162b]">
+                  <b className="text-[#4125cc]">실시간 인식 초안:</b> {draft.transcript}
                 </div>
               )}
               <div className="flex flex-wrap items-center gap-2">
@@ -789,16 +789,16 @@ export function VoiceInterview({
                   type="button"
                   disabled={busy || !!confirm}
                   onClick={() => void saveDraftAndTranscribe()}
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+                  className={saasUi.btnPrimary}
                 >
-                  <Sparkles size={15} aria-hidden="true" />
+                  <Sparkles size={16} aria-hidden="true" />
                   {busy ? '변환·저장 중…' : '음성 저장 + STT 변환·기록 반영'}
                 </button>
                 <button
                   type="button"
                   disabled={busy || !!confirm}
                   onClick={() => downloadAnswer(draft)}
-                  className="min-h-10 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a]"
+                  className={saasUi.btnSecondary}
                 >
                   내려받기
                 </button>
@@ -810,7 +810,7 @@ export function VoiceInterview({
                     setError('');
                     setNotice('저장하지 않은 녹음을 버렸어요.');
                   }}
-                  className="min-h-10 px-2 text-sm font-semibold text-[#a6214e] hover:underline"
+                  className="min-h-11 px-3 text-[15px] font-bold text-[#b01e4a] hover:underline"
                 >
                   녹음 버리기
                 </button>
@@ -818,25 +818,25 @@ export function VoiceInterview({
             </div>
           )}
 
-          <p className="text-[12px] text-[#62627a]">
+          <p className="text-[14px] leading-relaxed text-[#565570]">
             오디오 파일은 이 브라우저에만 보관되며, STT 변환 시에만 AI 서버로 음성 데이터가 전달돼 텍스트가 생성됩니다.
           </p>
         </div>
 
         {error && (
-          <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+          <p className="rounded-xl bg-[#fff0f3] px-4 py-2.5 text-[14px] font-medium text-[#9f1d45]" role="alert">
             {error}
           </p>
         )}
         {notice && (
-          <p className="rounded-lg bg-[#f1edff] px-3 py-2 text-[13px] font-medium text-[#4d30cf]" role="status">
+          <p className="rounded-xl bg-[#efeaff] px-4 py-2.5 text-[14px] font-semibold text-[#4125cc]" role="status">
             {notice}
           </p>
         )}
 
-        <section className="grid gap-2.5" aria-label="저장된 음성 답변 및 STT 기록">
+        <section className="grid gap-3" aria-label="저장된 음성 답변 및 STT 기록">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-[#22213a]">저장된 음성 답변 · STT 변환 기록 {answers.length}개</h3>
+            <h3 className="text-[17px] font-bold text-[#17162b]">저장된 음성 답변 · STT 변환 기록 {answers.length}개</h3>
             {answers.length > 0 && (
               <button
                 type="button"
@@ -844,35 +844,35 @@ export function VoiceInterview({
                   const file = exportVoiceAnswersCsv(person, answers);
                   setNotice(`음성 STT 기록(${file})을 CSV로 다운로드했어요.`);
                 }}
-                className="inline-flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-2.5 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                className={saasUi.btnCompactSecondary}
               >
-                <Download size={13} aria-hidden="true" /> STT 기록 CSV
+                <Download size={15} aria-hidden="true" /> STT 기록 CSV
               </button>
             )}
           </div>
           {loading ? (
-            <p className="text-[13px] text-[#62627a]">불러오는 중…</p>
+            <p className="text-[15px] text-[#565570]">불러오는 중…</p>
           ) : answers.length === 0 ? (
-            <p className="text-[13px] text-[#62627a]">아직 저장된 답변이 없어요.</p>
+            <p className="text-[15px] text-[#565570]">아직 저장된 답변이 없어요.</p>
           ) : (
-            <ul className="grid gap-2.5">
+            <ul className="grid gap-3">
               {answers.map((a) => {
                 const isTranscribing = Boolean(transcribingIds[a.id]);
                 const isDeleting = Boolean(deletingIds[a.id]);
                 const isEditing = editingId === a.id;
                 return (
-                  <li key={a.id} className="grid gap-2.5 rounded-xl border border-[#e9e7f1] bg-white p-3.5">
+                  <li key={a.id} className={`${saasUi.card} grid gap-3 p-4`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <b className="block truncate text-sm text-[#22213a]">{a.question}</b>
-                        <small className="tnum flex flex-wrap items-center gap-1.5 text-xs text-[#62627a]">
+                        <b className="block truncate text-[16px] font-bold text-[#17162b]">{a.question}</b>
+                        <small className="tnum mt-0.5 flex flex-wrap items-center gap-1.5 text-[13px] text-[#565570]">
                           <time dateTime={new Date(a.recordedAt).toISOString()}>{dates.format(a.recordedAt)}</time>
                           <span aria-hidden="true">·</span>
                           <span>{clock(a.seconds)}</span>
                           {a.transcript && (
                             <>
                               <span aria-hidden="true">·</span>
-                              <span className="font-semibold text-[#4d30cf]">
+                              <span className="font-semibold text-[#4125cc]">
                                 {a.sttEngine === 'gemini' ? 'AI STT 완료' : '실시간 초안'}
                               </span>
                             </>
@@ -881,7 +881,7 @@ export function VoiceInterview({
                             <>
                               <span aria-hidden="true">·</span>
                               <span className="inline-flex items-center gap-1 font-semibold text-[#14674d]">
-                                <CheckCircle2 size={12} aria-hidden="true" /> 기록 공간 저장됨
+                                <CheckCircle2 size={13} aria-hidden="true" /> 기록 공간 저장됨
                               </span>
                             </>
                           )}
@@ -893,19 +893,19 @@ export function VoiceInterview({
                           aria-label={`${a.question} 녹음 내려받기`}
                           disabled={isDeleting}
                           onClick={() => downloadAnswer(a)}
-                          className="inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 text-xs font-semibold text-[#62627a] hover:bg-[#f1edff] hover:text-[#4d30cf] disabled:opacity-45"
+                          className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 text-[13px] font-semibold text-[#565570] hover:bg-[#efeaff] hover:text-[#4125cc] disabled:opacity-45"
                         >
-                          <Download size={14} aria-hidden="true" />
+                          <Download size={15} aria-hidden="true" />
                           <span className="hidden sm:inline">내려받기</span>
                         </button>
                         <button
                           type="button"
                           aria-label={`${a.question} 녹음 삭제`}
-                          disabled={isTranscribing || isDeleting}
+                          disabled={isDeleting}
                           onClick={() => void removeVoiceAnswerNow(a)}
-                          className="inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2 text-xs font-semibold text-[#9f233f] hover:bg-[#fff0f3] disabled:opacity-45"
+                          className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 text-[13px] font-semibold text-[#9f1d45] hover:bg-[#fff0f3] disabled:opacity-45"
                         >
-                          <Trash2 size={14} aria-hidden="true" />
+                          <Trash2 size={15} aria-hidden="true" />
                           <span>{isDeleting ? '삭제 중…' : '삭제'}</span>
                         </button>
                       </div>
@@ -913,10 +913,10 @@ export function VoiceInterview({
 
                     <AudioPlayer answer={a} />
 
-                    <div className="grid gap-2 rounded-lg border border-[#efedf6] bg-[#faf9fd] p-3">
+                    <div className="grid gap-2.5 rounded-xl border border-[#e6e3f0] bg-[#faf9fd] p-3.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#22213a]">
-                          <FileText size={13} className="text-[#5b3df5]" aria-hidden="true" />
+                        <span className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#17162b]">
+                          <FileText size={15} className="text-[#4c2ee6]" aria-hidden="true" />
                           변환된 인터뷰 텍스트 (STT)
                         </span>
                         <div className="flex flex-wrap items-center gap-1.5">
@@ -924,17 +924,17 @@ export function VoiceInterview({
                             type="button"
                             disabled={isTranscribing}
                             onClick={() => void transcribeAndUpdate(a, { autoSyncToRecord: !a.syncedToRecord })}
-                            className="inline-flex min-h-7 items-center gap-1 rounded-md border border-[#d8cef7] bg-white px-2.5 text-[11px] font-semibold text-[#4d30cf] hover:bg-[#f1edff] disabled:opacity-50"
+                            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#d6cbf8] bg-white px-3 text-[13px] font-semibold text-[#4125cc] hover:bg-[#efeaff] disabled:opacity-50"
                           >
                             {isTranscribing ? (
                               '변환 중…'
                             ) : a.transcript ? (
                               <>
-                                <RotateCcw size={11} aria-hidden="true" /> AI 재변환
+                                <RotateCcw size={13} aria-hidden="true" /> AI 재변환
                               </>
                             ) : (
                               <>
-                                <Sparkles size={11} aria-hidden="true" /> AI 텍스트 변환
+                                <Sparkles size={13} aria-hidden="true" /> AI 텍스트 변환
                               </>
                             )}
                           </button>
@@ -944,15 +944,15 @@ export function VoiceInterview({
                               <button
                                 type="button"
                                 onClick={() => void copyTranscript(a.id, a.transcript ?? '')}
-                                className="inline-flex min-h-7 items-center gap-1 rounded-md border border-[#e2deee] bg-white px-2.5 text-[11px] font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                                className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#dcd8e8] bg-white px-3 text-[13px] font-semibold text-[#17162b] hover:bg-[#faf9fd]"
                               >
                                 {copiedId === a.id ? (
                                   <>
-                                    <Check size={11} className="text-[#14674d]" aria-hidden="true" /> 복사됨
+                                    <Check size={13} className="text-[#14674d]" aria-hidden="true" /> 복사됨
                                   </>
                                 ) : (
                                   <>
-                                    <Copy size={11} aria-hidden="true" /> 복사
+                                    <Copy size={13} aria-hidden="true" /> 복사
                                   </>
                                 )}
                               </button>
@@ -962,15 +962,15 @@ export function VoiceInterview({
                                   setEditingId(a.id);
                                   setEditingText(a.transcript ?? '');
                                 }}
-                                className="inline-flex min-h-7 items-center gap-1 rounded-md border border-[#e2deee] bg-white px-2.5 text-[11px] font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                                className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#dcd8e8] bg-white px-3 text-[13px] font-semibold text-[#17162b] hover:bg-[#faf9fd]"
                               >
-                                <Pencil size={11} aria-hidden="true" /> 편집
+                                <Pencil size={13} aria-hidden="true" /> 편집
                               </button>
                               {onSaveTranscript && !a.syncedToRecord && (
                                 <button
                                   type="button"
                                   onClick={() => syncAnswerToRecord(a)}
-                                  className="inline-flex min-h-7 items-center gap-1 rounded-md bg-[#5b3df5] px-2.5 text-[11px] font-semibold text-white hover:bg-[#4b2ee0]"
+                                  className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-[#4c2ee6] px-3 text-[13px] font-semibold text-white hover:bg-[#3d22c9]"
                                 >
                                   기록 공간에 저장
                                 </button>
@@ -981,25 +981,25 @@ export function VoiceInterview({
                       </div>
 
                       {isEditing ? (
-                        <div className="grid gap-2">
+                        <div className="grid gap-2.5">
                           <textarea
                             rows={3}
                             value={editingText}
                             onChange={(e) => setEditingText(e.target.value)}
-                            className="w-full rounded-lg border border-[#5b3df5] bg-white px-3 py-2 text-[13px] text-[#22213a]"
+                            className="w-full rounded-xl border border-[#4c2ee6] bg-white px-3.5 py-2.5 text-[15px] text-[#17162b] focus:outline-none"
                           />
                           <div className="flex flex-wrap justify-end gap-2">
                             <button
                               type="button"
                               onClick={() => setEditingId('')}
-                              className="min-h-8 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a]"
+                              className={saasUi.btnCompactSecondary}
                             >
                               취소
                             </button>
                             <button
                               type="button"
                               onClick={() => void saveEditedTranscript(a)}
-                              className="min-h-8 rounded-lg bg-[#5b3df5] px-3 text-xs font-semibold text-white"
+                              className={saasUi.btnCompactPrimary}
                             >
                               텍스트 저장
                             </button>
@@ -1009,7 +1009,7 @@ export function VoiceInterview({
                                 onClick={() => {
                                   void saveEditedTranscript(a).then(() => syncAnswerToRecord(a, editingText));
                                 }}
-                                className="min-h-8 rounded-lg border border-[#5b3df5] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf]"
+                                className={saasUi.btnCompactSoft}
                               >
                                 수정본 기록 공간에 반영
                               </button>
@@ -1017,11 +1017,11 @@ export function VoiceInterview({
                           </div>
                         </div>
                       ) : isTranscribing ? (
-                        <p className="text-xs text-[#4d30cf]">음성 데이터를 분석하여 텍스트로 변환하고 있어요…</p>
+                        <p className="text-[14px] text-[#4125cc]">음성 데이터를 분석하여 텍스트로 변환하고 있어요…</p>
                       ) : a.transcript ? (
-                        <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#22213a]">{a.transcript}</p>
+                        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[#17162b]">{a.transcript}</p>
                       ) : (
-                        <p className="text-xs text-[#62627a]">
+                        <p className="text-[14px] text-[#565570]">
                           아직 변환된 텍스트가 없어요. 우측의 &lsquo;AI 텍스트 변환&rsquo; 버튼을 눌러 텍스트로 바꿀 수 있어요.
                         </p>
                       )}

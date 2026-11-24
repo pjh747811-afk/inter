@@ -1,7 +1,7 @@
 import { useMemo, useState, type ChangeEvent } from 'react';
 import { Download, FileSpreadsheet, Upload, Users } from 'lucide-react';
 import { groups, statuses, type Person } from '../lib/research';
-import { download, Modal } from './ResearchUI';
+import { download, Modal, saasUi } from './ResearchUI';
 
 function parseDelimitedText(raw: string): string[][] {
   const normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -177,18 +177,18 @@ export function BulkPersonImportModal({
   return (
     <Modal title="인터뷰 대상자 일괄 추가 (100명+ 지원)" close={close} wide>
       <div className="grid gap-4">
-        <div className="rounded-xl border border-[#e5dcfc] bg-[#faf7ff] p-3.5 text-[13px] text-[#22213a]">
-          <p className="font-semibold text-[#4d30cf]">
+        <div className={`${saasUi.cardSoft} p-4 text-[15px] text-[#17162b]`}>
+          <p className="font-bold text-[#4125cc]">
             100명 이상의 인터뷰 대상자도 인원 제한 없이 한 번에 등록·검색·CSV 내보내기할 수 있어요.
           </p>
-          <p className="mt-1 text-xs text-[#62627a]">
-            엑셀에서 작성한 <code className="font-mono">.csv</code> 파일을 업로드하거나, 아래 칸에 이름만 줄바꿈으로 붙여넣어도 바로 추가돼요.
+          <p className="mt-1 text-[14px] leading-relaxed text-[#565570]">
+            엑셀에서 작성한 <code className="font-mono font-semibold text-[#17162b]">.csv</code> 파일을 업로드하거나, 아래 칸에 이름만 줄바꿈으로 붙여넣어도 바로 추가돼요.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[#d8cef7] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#faf8ff]">
-            <Upload size={14} aria-hidden="true" />
+        <div className="flex flex-wrap items-center gap-2.5">
+          <label className={`${saasUi.btnCompactSoft} cursor-pointer`}>
+            <Upload size={15} aria-hidden="true" />
             CSV / 텍스트 파일 불러오기
             <input
               type="file"
@@ -200,44 +200,44 @@ export function BulkPersonImportModal({
           <button
             type="button"
             onClick={downloadTemplate}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+            className={saasUi.btnCompactSecondary}
           >
-            <Download size={14} aria-hidden="true" /> 엑셀 등록 양식 CSV 받기
+            <Download size={15} aria-hidden="true" /> 엑셀 등록 양식 CSV 받기
           </button>
           <button
             type="button"
             onClick={() => setRawText(sampleBulkText)}
-            className="text-xs font-bold text-[#5b3df5] hover:underline"
+            className="min-h-10 px-2 text-[14px] font-bold text-[#4c2ee6] hover:underline"
           >
             예시 데이터 채우기
           </button>
         </div>
 
         {fileError && (
-          <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-xs text-[#9a2148]" role="alert">
+          <p className="rounded-xl bg-[#fff0f3] px-3.5 py-2.5 text-[14px] font-medium text-[#9f1d45]" role="alert">
             {fileError}
           </p>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-1 text-xs font-semibold text-[#22213a]">
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <label className={saasUi.labelText}>
             기본 그룹 (열 생략 시 적용)
             <select
               value={defaultGroup}
               onChange={(e) => setDefaultGroup(e.target.value)}
-              className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs text-[#22213a]"
+              className={saasUi.select}
             >
               {groups.map((g) => (
                 <option key={g}>{g}</option>
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs font-semibold text-[#22213a]">
+          <label className={saasUi.labelText}>
             기본 진행 상태 (열 생략 시 적용)
             <select
               value={defaultStatus}
               onChange={(e) => setDefaultStatus(e.target.value)}
-              className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs text-[#22213a]"
+              className={saasUi.select}
             >
               {statuses.map((s) => (
                 <option key={s}>{s}</option>
@@ -246,7 +246,7 @@ export function BulkPersonImportModal({
           </label>
         </div>
 
-        <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
+        <label className={saasUi.labelText}>
           대상자 목록 붙여넣기 (줄바꿈 구분 또는 CSV/엑셀 복사)
           <textarea
             rows={7}
@@ -260,38 +260,38 @@ export function BulkPersonImportModal({
               '형식 2 (CSV 쉼표/탭 구분):',
               '이름, 특징, 그룹, 섭외경로, 진행상태, 인터뷰일시, 현재대안, 핵심인사이트',
             ].join('\n')}
-            className="w-full resize-y rounded-lg border border-[#dfdce9] bg-white px-3 py-2 font-mono text-xs leading-relaxed text-[#22213a] focus:border-[#5b3df5]"
+            className={`${saasUi.input} resize-y font-mono text-[14px] leading-relaxed`}
           />
         </label>
 
         {parsedPeople.length > 0 && (
-          <div className="grid gap-2 rounded-xl border border-[#e9e7f1] bg-[#faf9fd] p-3.5">
-            <div className="flex items-center justify-between gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 font-bold text-[#4d30cf]">
-                <FileSpreadsheet size={14} aria-hidden="true" />
+          <div className={`grid gap-2.5 ${saasUi.inset} p-4`}>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[14px]">
+              <span className="inline-flex items-center gap-1.5 font-bold text-[#4125cc]">
+                <FileSpreadsheet size={16} aria-hidden="true" />
                 인식된 대상자 <span className="tnum font-mono">{parsedPeople.length}명</span>
               </span>
-              <span className="text-[#62627a]">상위 {Math.min(5, parsedPeople.length)}건 미리보기</span>
+              <span className="text-[#565570]">상위 {Math.min(5, parsedPeople.length)}건 미리보기</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-xs tnum">
+              <table className="w-full border-collapse text-left text-[14px] tnum">
                 <thead>
-                  <tr className="border-b border-[#e6e3f0] text-[#62627a]">
-                    <th className="py-1.5 pr-3">이름</th>
-                    <th className="py-1.5 pr-3">특징</th>
-                    <th className="py-1.5 pr-3">그룹</th>
-                    <th className="py-1.5 pr-3">상태</th>
-                    <th className="py-1.5">대안/메모</th>
+                  <tr className="border-b border-[#e4e1ef] text-[13px] font-bold text-[#565570]">
+                    <th className="py-2 pr-3">이름</th>
+                    <th className="py-2 pr-3">특징</th>
+                    <th className="py-2 pr-3">그룹</th>
+                    <th className="py-2 pr-3">상태</th>
+                    <th className="py-2">대안/메모</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#efedf5]">
                   {parsedPeople.slice(0, 5).map((p) => (
                     <tr key={p.id}>
-                      <td className="py-1.5 pr-3 font-semibold text-[#22213a]">{p.name}</td>
-                      <td className="py-1.5 pr-3 text-[#62627a]">{p.desc || '—'}</td>
-                      <td className="py-1.5 pr-3 text-[#4d30cf]">{p.group}</td>
-                      <td className="py-1.5 pr-3 text-[#22213a]">{p.status}</td>
-                      <td className="max-w-[200px] truncate py-1.5 text-[#62627a]">
+                      <td className="py-2 pr-3 font-bold text-[#17162b]">{p.name}</td>
+                      <td className="py-2 pr-3 text-[#565570]">{p.desc || '—'}</td>
+                      <td className="py-2 pr-3 font-semibold text-[#4125cc]">{p.group}</td>
+                      <td className="py-2 pr-3 text-[#17162b]">{p.status}</td>
+                      <td className="max-w-[200px] truncate py-2 text-[#565570]">
                         {p.note || p.alternative || '—'}
                       </td>
                     </tr>
@@ -302,11 +302,11 @@ export function BulkPersonImportModal({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2.5 pt-1">
           <button
             type="button"
             onClick={close}
-            className="min-h-10 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+            className={saasUi.btnSecondary}
           >
             취소
           </button>
@@ -314,9 +314,9 @@ export function BulkPersonImportModal({
             type="button"
             disabled={parsedPeople.length === 0}
             onClick={() => onImport(parsedPeople)}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-45"
+            className={saasUi.btnPrimary}
           >
-            <Users size={15} aria-hidden="true" />
+            <Users size={16} aria-hidden="true" />
             <span className="tnum">{parsedPeople.length}명</span> 일괄 추가하기
           </button>
         </div>

@@ -44,27 +44,38 @@ function formatDateTime(ts: number | string | undefined): string {
 export function exportQuestionGuideCsv(guide: QuestionGuide): string {
   const rows: CsvRow[] = [
     ['검증 아이템', guide.item],
+    ...(guide.cpfHypothesis
+      ? [
+          ['고객 원형', guide.cpfHypothesis.customerArchetype],
+          ['고객 가설', guide.cpfHypothesis.customerHypothesis],
+          ['문제 가설', guide.cpfHypothesis.problemHypothesis],
+          ...(guide.cpfHypothesis.valueProposition ? [['가치제안', guide.cpfHypothesis.valueProposition]] : []),
+        ]
+      : []),
     [],
-    ['구분', '단계/문항유형', '질문/내용', '핵심목표/확인포인트', '선택지/필수여부'],
+    ['구분', '단계/문항유형', 'VPC 요소 / 연계 가설', '질문/내용', '확인 포인트 / 판단근거', '선택지/필수여부'],
   ];
 
   if (guide.analysis) {
-    rows.push(['검증 분석', '핵심 검증 목표', guide.analysis.coreGoal, '', '']);
+    rows.push(['검증 분석', '핵심 검증 목표', '', guide.analysis.coreGoal, '', '']);
     guide.analysis.keyHypotheses.forEach((h, idx) => {
-      rows.push(['검증 분석', `우선 검증 가설 ${idx + 1}`, h, '', '']);
+      rows.push(['검증 분석', `우선 검증 가설 ${idx + 1}`, '', h, '', '']);
     });
-    rows.push(['검증 분석', '질문 설계 진단', guide.analysis.questionAudit, '', '']);
+    rows.push(['검증 분석', '질문 설계 진단', '', guide.analysis.questionAudit, '', '']);
     guide.analysis.interviewTips.forEach((tip, idx) => {
-      rows.push(['검증 분석', `인터뷰 진행 팁 ${idx + 1}`, tip, '', '']);
+      rows.push(['검증 분석', `인터뷰 진행 팁 ${idx + 1}`, '', tip, '', '']);
     });
   }
 
   guide.interview.forEach((q, idx) => {
+    const vpcMeta = [q.vpcElement ? `[${q.vpcElement}]` : '', q.hypothesis ?? ''].filter(Boolean).join(' ');
+    const pointMeta = [q.purpose ?? '', q.metricSignal ? `판단근거: ${q.metricSignal}` : ''].filter(Boolean).join(' · ');
     rows.push([
       '인터뷰 질문',
       `${idx + 1}. ${q.stage}`,
+      vpcMeta,
       q.prompt,
-      q.purpose ?? '',
+      pointMeta,
       '',
     ]);
   });
@@ -73,6 +84,7 @@ export function exportQuestionGuideCsv(guide: QuestionGuide): string {
     rows.push([
       '설문 문항',
       `${idx + 1}. ${types[q.type]}`,
+      '',
       q.label,
       '',
       `${q.required ? '필수' : '선택'}${q.options.length ? ` · ${q.options.join(' / ')}` : ''}`,
@@ -90,17 +102,28 @@ export function exportInterviewAnalysisCsv(analysis: InterviewAnalysis): string 
     ['종합 요약', analysis.summary],
     ['검증 진단', analysis.validationReadiness],
     [],
-    ['분류', '원본 질문 / 항목', '판정 / 세부 구분', '진단 / 인사이트 내용', '개선 질문 / 실행 제안', '확인 지표'],
+    ['분류', '원본 질문 / 항목', '판정 / 세부 구분', '진단 / 인사이트 내용', '개선 질문 / 실행 제안', '확인 지표 / 원칙'],
   ];
 
   analysis.questionReviews.forEach((qr, idx) => {
     rows.push([
       `질문 진단 #${idx + 1}`,
       qr.original,
-      qr.verdict,
+      `${qr.verdict}${qr.violatedPrinciple ? ` (${qr.violatedPrinciple})` : ''}`,
       qr.diagnosis,
       qr.improved,
       qr.insightGoal,
+    ]);
+  });
+
+  analysis.insights.factPatternInsights?.forEach((fp, idx) => {
+    rows.push([
+      `Fact→Pattern→Insight #${idx + 1}`,
+      fp.fact,
+      `${fp.painGainTag} · ${fp.verdict}`,
+      `패턴: ${fp.pattern}`,
+      `해석(Insight): ${fp.insight}`,
+      '',
     ]);
   });
 
@@ -116,6 +139,10 @@ export function exportInterviewAnalysisCsv(analysis: InterviewAnalysis): string 
   });
   analysis.insights.nextActions.forEach((item, idx) => {
     rows.push(['다음 검증 액션', `액션 ${idx + 1}`, '', '', item, '']);
+  });
+
+  analysis.checklist?.forEach((chk, idx) => {
+    rows.push(['인터뷰 체크리스트', `${idx + 1}. ${chk.item}`, chk.status, chk.note, '', '']);
   });
 
   const filename = `인터뷰분석-${safeFileSlug(analysis.item, '리포트')}-${dateStamp()}.csv`;
@@ -548,23 +575,34 @@ export function exportResearchTemplateCsv(template: ResearchTemplate): string {
   const rows: CsvRow[] = [
     ['템플릿 제목', template.title],
     ['카테고리', template.category],
+    ...(template.validationStage ? [['검증 흐름 단계', template.validationStage]] : []),
+    ...(template.customerArchetype ? [['고객 원형', template.customerArchetype]] : []),
+    ...(template.valueProposition ? [['가치제안', template.valueProposition]] : []),
+    ...(template.cpfSummary
+      ? [
+          ['CPF 고객 가설', template.cpfSummary.customerHypothesis],
+          ['CPF 문제 가설', template.cpfSummary.problemHypothesis],
+        ]
+      : []),
     ['적합한 상황', template.situation],
     ['활용 시점', template.whenToUse],
     ['인터뷰 핵심 팁', template.cautionTip],
     ...(template.purposeInput ? [['입력한 리서치 목적', template.purposeInput]] : []),
     [],
-    ['구분', '단계 / 문항 유형', '질문 내용', '확인 포인트 / 선택지', '필수 여부'],
+    ['구분', '단계 / 문항 유형', 'VPC 요소 / 연계 가설', '질문 내용', '확인 포인트 / 선택지', '필수 여부'],
   ];
 
   template.interview.forEach((item, idx) => {
-    rows.push(['인터뷰 질문', `${idx + 1}. ${item.stage}`, item.prompt, item.purpose, '']);
+    const vpcMeta = [item.vpcElement ? `[${item.vpcElement}]` : '', item.hypothesis ?? ''].filter(Boolean).join(' ');
+    rows.push(['인터뷰 질문', `${idx + 1}. ${item.stage}`, vpcMeta, item.prompt, item.purpose, '']);
   });
 
-  rows.push(['설문 제목', '', template.surveyTitle, template.surveyIntro, '']);
+  rows.push(['설문 제목', '', '', template.surveyTitle, template.surveyIntro, '']);
   template.survey.forEach((q, idx) => {
     rows.push([
       '설문 문항',
       `${idx + 1}. ${types[q.type]}`,
+      '',
       q.label,
       q.type === 'choice' ? q.options.join(' / ') : q.type === 'scale' ? '1~5점 척도' : '자유 서술',
       q.required ? '필수' : '선택',

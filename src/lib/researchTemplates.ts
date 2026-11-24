@@ -4,9 +4,13 @@ import type { Question } from './research';
 
 export type TemplateCategory = '전체' | '초기 검증' | '컨셉·제품' | '수익화·이탈' | '스크리닝';
 export type TemplateFocus = 'both' | 'interview' | 'survey';
+export type ValidationStage = '고객검증' | '문제검증' | '솔루션검증';
+export type VpcElement = 'JTBD' | 'Pains' | 'Pain Relievers' | 'Gains' | 'Gain Creators';
 
 export interface InterviewTemplateItem {
   stage: string;
+  vpcElement?: VpcElement;
+  hypothesis?: string;
   prompt: string;
   purpose: string;
 }
@@ -15,6 +19,13 @@ export interface ResearchTemplate {
   id: string;
   title: string;
   category: Exclude<TemplateCategory, '전체'>;
+  validationStage?: ValidationStage;
+  customerArchetype?: string;
+  valueProposition?: string;
+  cpfSummary?: {
+    customerHypothesis: string;
+    problemHypothesis: string;
+  };
   situation: string;
   whenToUse: string;
   cautionTip: string;
@@ -39,9 +50,111 @@ export const templateCategories: TemplateCategory[] = [
 
 export const researchTemplates: ResearchTemplate[] = [
   {
+    id: 'vpc-cpf-validation',
+    title: 'VPC · CPF 고객검증 질문지 (실습 01)',
+    category: '초기 검증',
+    validationStage: '문제검증',
+    customerArchetype: '최종사용자 · 구매자 · (최종)의사결정자',
+    valueProposition: '고객의 핵심 작업(JTBD) 중 가장 빈도·강도가 높은 불편(Pain)을 기존 대안 대비 시간·비용 절감으로 해결',
+    cpfSummary: {
+      customerHypothesis: '특정 과업(JTBD)을 반복 수행하는 타겟 고객군은',
+      problemHypothesis: '기존 해결 방식의 병목·시간·비용 손실 때문에 핵심 문제를 겪고 있을 것이다.',
+    },
+    situation: '가치제안캔버스(VPC)에서 도출한 고객·문제 가설(CPF)을 사실(Fact)과 숫자로 검증할 때',
+    whenToUse: '고객군·고객원형(최종사용자/구매자/의사결정자)별로 문제 탐색 → 문제 강도(빈도·비용) → 기존 대안 순으로 질문할 때 사용하세요.',
+    cautionTip: '원칙 1(의견 대신 현재·과거 경험 묻기), 원칙 2(개방형 질문), 원칙 3("괜찮나요?/쓰실 건가요?/Would you" 등 평가·미래 가정 금지)을 지키세요.',
+    surveyTitle: '고객 경험(JTBD) 및 문제 강도 · 기존 대안 실태 조사',
+    surveyIntro:
+      '안녕하세요. 특정 업무·상황에서 겪으시는 실제 경험과 기존 해결 방식의 불편 정도를 파악하기 위한 짧은 조사(약 2~3분 소요)입니다. 솔직한 현재 경험만 응답해 주시면 됩니다.',
+    interview: [
+      {
+        stage: '1. 고객 특성 · JTBD',
+        vpcElement: 'JTBD',
+        hypothesis: '[고객 가설] 타겟 고객 원형은 특정 상황과 작업 흐름(JTBD)을 주기적으로 수행한다.',
+        prompt: '현재 담당하시는 상황(또는 작업)에서 가장 최근에 이 업무를 직접 처리하신 흐름을 처음부터 끝까지 알려주시겠어요?',
+        purpose: '고객 원형(사용자/구매자/의사결정자) 적합성과 실제 수행 행동(Fact) 확인',
+      },
+      {
+        stage: '2. 문제 탐색',
+        vpcElement: 'Pains',
+        hypothesis: '[문제 가설] 고객이 경험하는 문제 상황에서 특정 단계의 불편이 가장 크게 발생한다.',
+        prompt: '최근 이 문제를 겪은 경험은 언제인가요? 그때 어떤 상황이었고 무엇이 가장 불편했나요?',
+        purpose: '상상이 아닌 실제 최근 사례에서 발생한 핵심 Pain 확인',
+      },
+      {
+        stage: '3. 문제 강도 · 빈도/시간/비용',
+        vpcElement: 'Pains',
+        hypothesis: '[강도 가설] 해당 문제는 반복 빈도가 높고 시간·금전적 지출을 유발할 만큼 중요하다.',
+        prompt: '그 문제는 얼마나 자주 발생하며, 해결 과정에 평균적으로 시간과 비용은 얼마나 드나요? 비용을 직접 지출한 경험도 있나요?',
+        purpose: '판단근거가 되는 정량 데이터(횟수, 소요 시간, 금액) 확보',
+      },
+      {
+        stage: '4. 기존 대안 · 대체재 불만',
+        vpcElement: 'Pain Relievers',
+        hypothesis: '[대안 가설] 고객은 기존 대체재·경쟁사 제품을 사용 중이나 명확한 불만을 느끼고 있다.',
+        prompt: '그때 문제를 어떻게 해결하셨나요? 어떤 대안을 시도해 보셨고, 불만이 있음에도 왜 그 대안을 계속 사용하고 계신가요?',
+        purpose: '기존 대안의 한계와 전환 장벽(Switching Cost) 검증',
+      },
+      {
+        stage: '5. 기대 가치 · 우선순위',
+        vpcElement: 'Gains',
+        hypothesis: '[기대 가설] 고객은 특정 조건(시간/정확도/비용)이 개선될 때 가장 높은 효용을 느낀다.',
+        prompt: '이 작업이 끝났을 때 "오늘 정말 수월하게 잘 끝났다"고 느끼려면 어떤 지표나 결과가 달라져야 하나요?',
+        purpose: '고객이 진짜 돈을 내거나 행동을 바꿀 핵심 Gain 기준 파악',
+      },
+      {
+        stage: '6. 후속 인터뷰이 추천',
+        vpcElement: 'Gain Creators',
+        hypothesis: '[네트워크 확장] 동일한 JTBD와 Pain을 겪는 타겟 고객군을 연속 탐색할 수 있다.',
+        prompt: '혹시 주변에서 방금 말씀하신 것과 비슷한 상황을 자주 겪고 계신 동료나 지인분을 소개해 주실 수 있나요?',
+        purpose: '체크리스트 기준 후속 인터뷰 대상자 확보 및 타겟군 확장',
+      },
+    ],
+    survey: [
+      {
+        label: '현재 본인의 역할(고객 원형)과 가장 가까운 항목은 무엇인가요?',
+        type: 'choice',
+        required: true,
+        options: ['직접 사용하는 최종사용자', '비용을 지불하는 구매자', '도입을 승인하는 의사결정자', '주변에 추천·영향을 주는 관계자'],
+      },
+      {
+        label: '최근 한 달 동안 해당 문제 또는 불편 상황을 실제로 몇 회 정도 경험하셨나요?',
+        type: 'choice',
+        required: true,
+        options: ['거의 매일 (주 4회 이상)', '주 1~3회', '월 1~3회', '최근 한 달 내 경험 없음'],
+      },
+      {
+        label: '이 문제를 한 번 처리하거나 해결하는 데 평균적으로 시간이나 비용이 많이 소요된다.',
+        type: 'scale',
+        required: true,
+        options: [],
+      },
+      {
+        label: '현재 이 문제를 해결하기 위해 실제로 사용 중인 대안(도구·서비스·수기 방식)은 무엇인가요?',
+        type: 'choice',
+        required: true,
+        options: ['엑셀·메모 등 수기 처리', '기존 상용/경쟁 서비스 이용', '외주·타인에게 위임', '해결하지 않고 불편을 감수'],
+      },
+      {
+        label: '기존 대안을 사용하면서 가장 답답하거나 비싸거나 시간이 오래 걸렸던 최근 경험을 적어 주세요.',
+        type: 'text',
+        required: true,
+        options: [],
+      },
+      {
+        label: '이 문제 해결을 위해 현재 유료 서비스나 외주 등에 직접 지출하고 있는 월평균 비용 수준은 어느 정도인가요?',
+        type: 'choice',
+        required: true,
+        options: ['지출 없음 (무료 방식만 사용)', '월 1만 원 미만', '월 1만~5만 원', '월 5만 원 이상'],
+      },
+    ],
+  },
+  {
     id: 'problem-discovery',
     title: '고객 문제 검증',
     category: '초기 검증',
+    validationStage: '문제검증',
+    customerArchetype: '최종사용자',
     situation: '고객이 겪는 문제의 실제 빈도, 해결 비용, 현재 대안의 한계를 파고들 때',
     whenToUse: '아이디어나 솔루션을 소개하기 전, 문제가 실제로 돈을 내거나 시간을 쓸 만큼 아픈지 확인할 때 사용하세요.',
     cautionTip: '"이런 기능이 있으면 쓰실 건가요?" 같은 미래 가정 대신 지난 1~4주 내 실제 행동과 지출 내역을 물어보세요.',
@@ -51,31 +164,43 @@ export const researchTemplates: ResearchTemplate[] = [
     interview: [
       {
         stage: '1. 최근 발생 맥락',
+        vpcElement: 'JTBD',
+        hypothesis: '타겟 고객은 최근 2주 내 관련 과업 수행 중 반복적인 마찰을 겪고 있다.',
         prompt: '최근 2주 안에 이 문제 때문에 시간을 빼앗기거나 스트레스를 받았던 가장 구체적인 순간을 떠올려 주실 수 있나요?',
         purpose: '상상이나 일반론이 아닌 실제 최근 사건(Fact) 확보',
       },
       {
         stage: '2. 현재 해결 방식',
+        vpcElement: 'Pain Relievers',
+        hypothesis: '고객은 이미 나름의 임시 대안이나 수기 방식으로 문제를 처리하고 있다.',
         prompt: '그때 문제를 해결하기 위해 실제로 어떤 도구나 방법을 쓰셨나요? 순서대로 알려 주세요.',
         purpose: '고객이 이미 채택하고 있는 현실 대안(Alternative) 파악',
       },
       {
         stage: '3. 소요 비용 측정',
+        vpcElement: 'Pains',
+        hypothesis: '문제 해결 과정에 측정 가능한 시간 또는 금전적 비용이 반복 발생한다.',
         prompt: '그 방식으로 처리하는 데 시간이나 인력, 금전 비용이 대략 얼마나 들었나요?',
         purpose: '문제의 심각도를 시간·금액 단위로 정량화',
       },
       {
         stage: '4. 대안의 병목 지점',
+        vpcElement: 'Pains',
+        hypothesis: '기존 대안 사용 중 특정 단계에서 반복적인 실수나 지연이 발생한다.',
         prompt: '현재 사용 중인 방법에서 가장 번거롭거나 실수가 자주 나는 단계는 어디였나요?',
         purpose: '기존 대안에서 대체 가능한 명확한 틈새 발굴',
       },
       {
         stage: '5. 탐색·지불 이력',
+        vpcElement: 'Gains',
+        hypothesis: '실제로 해결 의지가 높은 고객은 이미 유료 툴이나 대안을 탐색한 경험이 있다.',
         prompt: '이 불편을 줄이려고 다른 서비스를 찾아보거나 유료 툴·외주에 비용을 써 본 적이 있나요?',
         purpose: '말뿐인 불편인지, 실제 해결 의지가 있는 문제인지 판별',
       },
       {
         stage: '6. 방치 시 영향',
+        vpcElement: 'Pains',
+        hypothesis: '문제를 방치할 경우 고객에게 실질적인 손실이나 리스크가 발생한다.',
         prompt: '만약 이 문제를 따로 해결하지 않고 그대로 둔다면 어떤 손실이나 불이익이 생기나요?',
         purpose: '필수 해결 과제(Must-have) 여부 검증',
       },
@@ -117,6 +242,8 @@ export const researchTemplates: ResearchTemplate[] = [
     id: 'value-proposition',
     title: '가치 제안 테스트',
     category: '컨셉·제품',
+    validationStage: '솔루션검증',
+    customerArchetype: '최종사용자 · 구매자',
     situation: '핵심 컨셉, 한 줄 메시지, 기대 혜택이 타겟 고객에게 명확히 와닿는지 검증할 때',
     whenToUse: '랜딩 페이지 문구, 서비스 소개 카드, 핵심 기능 우선순위를 정하기 전에 활용하세요.',
     cautionTip: '"좋아 보이네요"라는 예의상 칭찬은 신호가 아닙니다. 기존 방식에서 굳이 갈아탈 이유가 있는지를 확인하세요.',

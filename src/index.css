@@ -5,16 +5,16 @@
   --font-display: "Plus Jakarta Sans", "Pretendard Variable", "Pretendard", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --color-canvas: #f7f7fb;
+  --color-canvas: #f6f6fa;
   --color-surface: #ffffff;
-  --color-ink: #22213a;
-  --color-muted: #62627a;
-  --color-line: #e9e7f1;
-  --color-line-strong: #d0cae6;
-  --color-accent: #5b3df5;
-  --color-accent-hover: #4b2ee0;
-  --color-accent-soft: #f1edff;
-  --color-accent-ink: #4d30cf;
+  --color-ink: #17162b;
+  --color-muted: #565570;
+  --color-line: #e6e3f0;
+  --color-line-strong: #ccc5e4;
+  --color-accent: #4c2ee6;
+  --color-accent-hover: #3d22c9;
+  --color-accent-soft: #f2eeff;
+  --color-accent-ink: #4125cc;
 }
 
 @layer base {
@@ -27,8 +27,8 @@
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.65;
     word-break: keep-all;
     overflow-wrap: anywhere;
     -webkit-font-smoothing: antialiased;
@@ -54,7 +54,7 @@
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
-  height: 7px;
+  height: 8px;
   border-radius: 9999px;
   overflow: hidden;
   background-color: #efedf6;
@@ -67,35 +67,35 @@
 }
 
 .meter-progress::-webkit-progress-value {
-  background-color: #5b3df5;
+  background-color: #4c2ee6;
   border-radius: 9999px;
   transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .meter-progress::-moz-progress-bar {
-  background-color: #5b3df5;
+  background-color: #4c2ee6;
   border-radius: 9999px;
 }
 
 .meter-progress.meter-alt::-webkit-progress-value {
-  background-color: #4a7fd9;
+  background-color: #356bc9;
 }
 
 .meter-progress.meter-alt::-moz-progress-bar {
-  background-color: #4a7fd9;
+  background-color: #356bc9;
 }
 
 .meter-progress.meter-churn::-webkit-progress-value {
-  background-color: #1f8a65;
+  background-color: #19825f;
 }
 
 .meter-progress.meter-churn::-moz-progress-bar {
-  background-color: #1f8a65;
+  background-color: #19825f;
 }
 
 dialog.research-modal::backdrop {
-  background: rgba(24, 20, 48, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(23, 22, 43, 0.48);
+  backdrop-filter: blur(3px);
 }
 
 @media (prefers-reduced-motion: reduce) {

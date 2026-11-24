@@ -19,6 +19,7 @@ import {
   Mic,
   MonitorSmartphone,
   MoreHorizontal,
+  Play,
   Plus,
   Search,
   SlidersHorizontal,
@@ -40,7 +41,7 @@ import { webtoonInterview, webtoonTopic } from '../lib/webtoonValidation';
 import type { ResearchTemplate } from '../lib/researchTemplates';
 import { useWorkspaceSync } from '../lib/workspaceSync';
 import { BulkPersonImportModal } from './BulkPersonImportModal';
-import { download, Modal, PersonForm } from './ResearchUI';
+import { download, Modal, PersonForm, saasUi } from './ResearchUI';
 import { Surveys, useSurveys } from './Surveys';
 import { SurveyAnalytics } from './SurveyAnalytics';
 import { ResearchTemplates } from './ResearchTemplates';
@@ -87,9 +88,9 @@ const groupInfo = [
 ];
 
 const avatarBg = [
-  'bg-[#eee8ff] text-[#4d30cf]',
+  'bg-[#efeaff] text-[#4125cc]',
   'bg-[#eaf2ff] text-[#2d5fbc]',
-  'bg-[#e6f7ef] text-[#176b50]',
+  'bg-[#e6f7ef] text-[#14674d]',
   'bg-[#fff1e2] text-[#a44b16]',
 ];
 
@@ -301,24 +302,24 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-dvh bg-[#f7f7fb] text-[#22213a] lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+    <div className="min-h-dvh bg-[#f6f6fa] text-[#17162b] lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
       <a
         href="#workspace-main"
-        className="fixed left-2 top-2 z-50 -translate-y-24 rounded-lg bg-white px-3 py-2 text-sm font-semibold shadow focus:translate-y-0"
+        className="fixed left-2 top-2 z-50 -translate-y-24 rounded-xl bg-white px-3.5 py-2 text-[15px] font-semibold text-[#17162b] shadow focus:translate-y-0"
       >
         본문으로 이동
       </a>
 
       {/* Sidebar (Desktop) + Compact Header Nav (Mobile) */}
-      <aside className="border-b border-[#e9e7f1] bg-white px-4 py-3 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-b-0 lg:border-r lg:px-4 lg:py-6">
+      <aside className="border-b border-[#e6e3f0] bg-white px-4 py-3 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-b-0 lg:border-r lg:px-4 lg:py-6">
         <div className="flex items-center justify-between gap-3 lg:block">
-          <Link to="/" className="flex items-center gap-2.5 text-inherit no-underline">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#5b3df5] text-white">
+          <Link to="/" className="flex items-center gap-3 text-inherit no-underline">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#4c2ee6] text-white shadow-sm">
               <AudioLines size={20} aria-hidden="true" />
             </span>
             <span>
-              <b className="block font-display text-lg font-extrabold leading-tight tracking-tight">리서치랩</b>
-              <small className="block text-[11px] text-[#62627a]">고객 검증 워크스페이스</small>
+              <b className="block font-display text-[21px] font-extrabold leading-tight tracking-tight text-[#17162b]">리서치랩</b>
+              <small className="block text-[13px] font-medium text-[#565570]">고객 검증 워크스페이스</small>
             </span>
           </Link>
 
@@ -328,15 +329,15 @@ export default function Home() {
               setGuideDraftQuestions('');
               setGuideMode('generate');
             }}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e5dcfc] bg-[#f8f5ff] px-3 text-xs font-bold text-[#4d30cf] lg:hidden"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-[#dfd7fb] bg-[#f7f4ff] px-3.5 text-[14px] font-bold text-[#4125cc] lg:hidden"
           >
-            <BookOpen size={15} aria-hidden="true" />
+            <BookOpen size={16} aria-hidden="true" />
             리서치 가이드
           </button>
         </div>
 
-        <nav aria-label="워크스페이스" className="hidden lg:mt-8 lg:grid lg:grid-cols-1 lg:gap-1">
-          <p className="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-[#8a86a0]">워크스페이스</p>
+        <nav aria-label="워크스페이스" className="hidden lg:mt-8 lg:grid lg:grid-cols-1 lg:gap-1.5">
+          <p className="px-3.5 pb-1.5 text-[13px] font-bold tracking-wide text-[#75728c]">워크스페이스</p>
           {sections.map(({ id, name, icon: Icon }) => {
             const active = section.id === id;
             return (
@@ -344,13 +345,13 @@ export default function Home() {
                 key={id}
                 to={id === 'home' ? '/' : `/?view=${id}`}
                 aria-current={active ? 'page' : undefined}
-                className={`flex min-h-10 shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+                className={`flex min-h-11 shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-[16px] transition-colors ${
                   active
-                    ? 'bg-[#eee9ff] font-bold text-[#4d30cf]'
-                    : 'text-[#54546d] hover:bg-[#f6f4fd] hover:text-[#22213a]'
+                    ? 'bg-[#efeaff] font-extrabold text-[#4125cc]'
+                    : 'font-semibold text-[#44435c] hover:bg-[#f6f4fd] hover:text-[#17162b]'
                 }`}
               >
-                <Icon size={17} aria-hidden="true" className="shrink-0" />
+                <Icon size={19} aria-hidden="true" className="shrink-0" />
                 <span>{name}</span>
               </Link>
             );
@@ -363,39 +364,39 @@ export default function Home() {
             setGuideDraftQuestions('');
             setGuideMode('generate');
           }}
-          className="mt-auto hidden items-center gap-2.5 rounded-xl border border-[#e8ddfb] bg-[#f8f5ff] p-3 text-left text-[#4d30cf] transition-colors hover:bg-[#f0eaff] lg:flex"
+          className="mt-auto hidden items-center gap-3 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] p-3.5 text-left text-[#4125cc] transition-colors hover:bg-[#efeaff] lg:flex"
         >
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#eee8ff]">
-            <BookOpen size={17} aria-hidden="true" />
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ebe3ff]">
+            <BookOpen size={19} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
-            <b className="block text-[13px] font-bold">리서치 가이드</b>
-            <small className="block truncate text-[11px] text-[#6e649c]">AI 분석 · 설문 · 나의 질문함</small>
+            <b className="block text-[15px] font-extrabold">리서치 가이드</b>
+            <small className="block truncate text-[13px] font-medium text-[#5c5486]">AI 분석 · 설문 · 나의 질문함</small>
           </span>
-          <ChevronRight size={14} aria-hidden="true" className="shrink-0" />
+          <ChevronRight size={16} aria-hidden="true" className="shrink-0" />
         </button>
       </aside>
 
       {/* Main Workspace */}
       <div className="min-w-0">
-        <header className="flex min-h-14 flex-wrap items-center justify-between gap-2 border-b border-[#e9e7f1] bg-white px-4 py-2 sm:px-8">
-          <div className="flex items-center gap-1.5 text-[13px] text-[#62627a]">
-            <span className="hidden sm:inline">워크스페이스</span>
-            <ChevronRight size={13} className="hidden sm:inline" aria-hidden="true" />
-            <b className="font-semibold text-[#22213a]">{section.name}</b>
+        <header className="flex min-h-16 flex-wrap items-center justify-between gap-2.5 border-b border-[#e6e3f0] bg-white px-4 py-2.5 sm:px-8">
+          <div className="flex items-center gap-1.5 text-[15px] text-[#565570]">
+            <span className="hidden font-medium sm:inline">워크스페이스</span>
+            <ChevronRight size={15} className="hidden sm:inline" aria-hidden="true" />
+            <b className="font-extrabold text-[#17162b]">{section.name}</b>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setSyncModalOpen(true)}
-              className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 text-xs font-semibold transition-colors sm:px-3 ${
+              className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border px-3.5 text-[14px] font-bold transition-colors ${
                 workspaceSync.syncId && workspaceSync.connected
                   ? 'border-[#b7e2d1] bg-[#edf9f4] text-[#14674d] hover:bg-[#e1f5ed]'
-                  : 'border-[#e2deee] bg-white text-[#22213a] hover:bg-[#f7f7fb]'
+                  : 'border-[#dcd8e8] bg-white text-[#17162b] hover:bg-[#f6f6fa]'
               }`}
             >
-              <MonitorSmartphone size={14} aria-hidden="true" />
+              <MonitorSmartphone size={16} aria-hidden="true" />
               {workspaceSync.syncId ? (
                 <span className="tnum">
                   연동 {workspaceSync.syncId} · PC {workspaceSync.presence.pcCount}/모바일 {workspaceSync.presence.mobileCount}
@@ -408,17 +409,17 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setVoice('pick')}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e5dcfc] bg-[#f5f1ff] px-2.5 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee6ff] sm:px-3"
+                className={saasUi.btnCompactSoft}
               >
-                <Mic size={15} aria-hidden="true" /> <span className="hidden sm:inline">음성 인터뷰</span><span className="sm:hidden">녹음</span>
+                <Mic size={16} aria-hidden="true" /> <span className="hidden sm:inline">음성 인터뷰</span><span className="sm:hidden">녹음</span>
               </button>
             )}
             <button
               type="button"
               onClick={() => setSummaryModal({ title: '', text: '' })}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-2.5 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] sm:px-3"
+              className={saasUi.btnCompactSecondary}
             >
-              <FileText size={14} className="text-[#5b3df5]" aria-hidden="true" /> <span className="hidden sm:inline">텍스트 요약</span><span className="sm:hidden">요약</span>
+              <FileText size={16} className="text-[#4c2ee6]" aria-hidden="true" /> <span className="hidden sm:inline">텍스트 요약</span><span className="sm:hidden">요약</span>
             </button>
             <button
               type="button"
@@ -426,24 +427,24 @@ export default function Home() {
                 setGuideDraftQuestions('');
                 setGuideMode('analyze');
               }}
-              className="hidden min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] sm:inline-flex"
+              className={`hidden sm:inline-flex ${saasUi.btnCompactSecondary}`}
             >
-              <Sparkles size={14} className="text-[#5b3df5]" aria-hidden="true" /> AI 질문·메모 분석
+              <Sparkles size={16} className="text-[#4c2ee6]" aria-hidden="true" /> AI 질문·메모 분석
             </button>
           </div>
         </header>
 
-        <main id="workspace-main" tabIndex={-1} className="mx-auto grid max-w-[1400px] gap-5 px-4 pt-5 pb-24 sm:px-8 lg:pt-6 lg:pb-6">
+        <main id="workspace-main" tabIndex={-1} className="mx-auto grid max-w-[1400px] gap-6 px-4 pt-6 pb-24 sm:px-8 lg:pt-7 lg:pb-8">
           {notice && (
             <div
               role="status"
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dfd4fb] bg-[#f5f1ff] px-4 py-2.5 text-[13px] font-medium text-[#4d30cf]"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dfd7fb] bg-[#efeaff] px-4 py-3 text-[15px] font-medium text-[#4125cc]"
             >
               <span>{notice}</span>
               <button
                 type="button"
                 onClick={() => setNotice('')}
-                className="text-xs font-bold text-[#4d30cf] hover:underline"
+                className="text-[14px] font-bold text-[#4125cc] hover:underline"
               >
                 닫기
               </button>
@@ -452,66 +453,71 @@ export default function Home() {
 
           {section.id === 'home' && (
             <>
-              <section className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-[#e9defe] bg-[#f0eaff] px-6 py-7 sm:flex-row sm:items-center sm:px-8">
-                <div className="relative z-10 max-w-xl">
-                  <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4d30cf]">
-                    <FlaskConical aria-hidden="true" size={14} /> 고객 검증 워크스페이스
+              <section className={`relative flex flex-col justify-between gap-8 overflow-hidden ${saasUi.card} px-6 py-8 sm:px-10 sm:py-10 lg:flex-row lg:items-center`}>
+                <div className="relative z-10 max-w-2xl">
+                  <p className="inline-flex items-center gap-1.5 text-[14px] font-extrabold tracking-tight text-[#4c2ee6]">
+                    <FlaskConical aria-hidden="true" size={16} /> 고객 검증 워크스페이스
                   </p>
-                  <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight tracking-tight text-[#22213a] sm:text-4xl [text-wrap:balance]">
-                    좋은 질문에서
+                  <h1 className="mt-2.5 font-display text-[34px] font-extrabold leading-[1.16] tracking-[-0.025em] text-[#17162b] sm:text-[44px] lg:text-[48px] [text-wrap:balance]">
+                    <strong className="font-extrabold text-[#4c2ee6]">좋은 질문</strong>에서
                     <br />
-                    좋은 발견이 시작돼요.
+                    <strong className="font-extrabold text-[#17162b]">좋은 발견</strong>이 시작돼요.
                   </h1>
-                  <p className="mt-2.5 text-sm text-[#595472]">
-                    인터뷰 질문 자동 분석·정리부터 타겟 유저 설문 생성·배포, 인사이트 관리까지 한곳에서 진행해요.
+                  <p className="mt-3.5 max-w-xl text-[16px] leading-relaxed text-[#44435c] sm:text-[17px]">
+                    <strong className="font-bold text-[#17162b]">인터뷰 질문 설계·실시간 녹음</strong>부터{' '}
+                    <strong className="font-bold text-[#17162b]">타겟 유저 설문 배포</strong>,{' '}
+                    <strong className="font-bold text-[#17162b]">AI 인사이트 리포트</strong>까지 한곳에서 진행해요.
                   </p>
-                  <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setEditing('new')}
-                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
+                      className="inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-[#4c2ee6] px-5 text-[16px] font-bold text-white shadow-[0_2px_8px_rgba(76,46,230,0.22)] transition-colors hover:bg-[#3d22c9]"
                     >
-                      <Plus size={16} aria-hidden="true" /> 대상자 추가
+                      <Plus size={18} aria-hidden="true" /> 대상자 추가
                     </button>
                     <button
                       type="button"
-                      onClick={() => setGuideMode('analyze')}
-                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-white px-4 text-sm font-semibold text-[#4d30cf] hover:bg-[#faf8ff]"
+                      onClick={() => {
+                        setGuideDraftQuestions('');
+                        setGuideMode('generate');
+                      }}
+                      className="inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-[#cfc6f7] bg-[#f6f3ff] px-5 text-[16px] font-bold text-[#4125cc] transition-colors hover:bg-[#ebe4ff]"
                     >
-                      <Sparkles size={15} aria-hidden="true" /> 인터뷰 질문 분석
+                      <Play size={16} aria-hidden="true" /> 인터뷰 질문 시작
                     </button>
                     <Link
                       to="/?view=surveys&new=1"
-                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#faf8ff]"
+                      className="inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-[#dcd8e8] bg-white px-5 text-[16px] font-bold text-[#17162b] transition-colors hover:border-[#b9b0e0] hover:bg-[#faf9fd]"
                     >
-                      설문 만들기 <ArrowRight size={15} aria-hidden="true" />
+                      설문 만들기 <ArrowRight size={17} aria-hidden="true" />
                     </Link>
                     <Link
                       to="/?view=templates"
-                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#4d30cf] hover:bg-[#faf8ff]"
+                      className="inline-flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-[#dcd8e8] bg-white px-5 text-[16px] font-bold text-[#4125cc] transition-colors hover:border-[#b9b0e0] hover:bg-[#faf9fd]"
                     >
-                      <Library size={15} aria-hidden="true" /> 질문 템플릿 생성
+                      <Library size={17} aria-hidden="true" /> 질문 템플릿 생성
                     </Link>
                   </div>
                 </div>
                 <HeroArt />
               </section>
 
-              <section aria-label="리서치 현황" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <section aria-label="리서치 현황" className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
                 {statItems.map(({ Icon, label, unit, to, tint }, i) => (
                   <Link
                     to={to}
                     key={label}
-                    className="flex min-h-20 items-center gap-3 rounded-2xl border border-[#e9e7f1] bg-white px-4 py-3.5 transition-colors hover:border-[#cfc1f3]"
+                    className={`flex min-h-24 items-center gap-3.5 ${saasUi.card} px-5 py-4.5 transition-all hover:border-[#bfb4ec] hover:shadow-[0_4px_14px_rgba(76,46,230,0.06)]`}
                   >
-                    <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${tint}`}>
-                      <Icon size={19} aria-hidden="true" />
+                    <span className={`grid size-12 shrink-0 place-items-center rounded-xl ${tint}`}>
+                      <Icon size={21} aria-hidden="true" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-xs font-medium text-[#62627a]">{label}</span>
-                      <span className="tnum mt-0.5 block font-display text-2xl font-extrabold leading-tight text-[#22213a]">
+                      <span className="block truncate text-[14px] font-bold text-[#565570]">{label}</span>
+                      <span className="tnum mt-0.5 block font-display text-[30px] font-extrabold leading-tight tracking-tight text-[#17162b] sm:text-[34px]">
                         {i === 3 && surveyState.error ? '—' : counts[i]}
-                        <small className="ml-0.5 text-xs font-semibold text-[#62627a]">{unit}</small>
+                        <small className="ml-1 text-[15px] font-bold text-[#565570]">{unit}</small>
                       </span>
                     </span>
                   </Link>
@@ -521,24 +527,27 @@ export default function Home() {
           )}
 
           {(section.id === 'home' || section.id === 'people') && (
-            <div className={`grid items-start gap-4 ${section.id === 'people' ? 'grid-cols-1' : 'xl:grid-cols-[minmax(0,1fr)_270px]'}`}>
-              <section className="min-w-0 rounded-2xl border border-[#e9e7f1] bg-white">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+            <div className={`grid items-start gap-5 ${section.id === 'people' ? 'grid-cols-1' : 'xl:grid-cols-[minmax(0,1fr)_300px]'}`}>
+              <section className={`min-w-0 ${saasUi.card}`}>
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4.5 sm:px-6">
                   <div>
                     {section.id === 'people' ? (
-                      <h1 className="font-display text-2xl font-bold tracking-tight text-[#22213a]">인터뷰 대상자</h1>
+                      <h1 className={saasUi.pageTitle}>인터뷰 대상자</h1>
                     ) : (
-                      <h2 className="font-display text-lg font-bold text-[#22213a]">인터뷰 대상자</h2>
+                      <h2 className="font-display text-[21px] font-extrabold tracking-tight text-[#17162b]">인터뷰 대상자</h2>
                     )}
-                    <p className="mt-0.5 text-[13px] text-[#62627a]">섭외 현황과 인터뷰 일정을 관리해요.</p>
+                    <p className="mt-1 text-[15px] text-[#565570]">
+                      <strong className="font-bold text-[#17162b]">섭외 현황</strong>과{' '}
+                      <strong className="font-bold text-[#17162b]">인터뷰 일정</strong>을 한눈에 관리해요.
+                    </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setBulkImportOpen(true)}
-                      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee8ff]"
+                      className={saasUi.btnCompactSoft}
                     >
-                      <Upload size={14} aria-hidden="true" /> 일괄 추가
+                      <Upload size={16} aria-hidden="true" /> 일괄 추가
                     </button>
                     <button
                       type="button"
@@ -555,25 +564,25 @@ export default function Home() {
                         )
                       }
                       title="현재 검색 결과에서 예시를 제외하고 전체 내보내기"
-                      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                      className={saasUi.btnCompactSecondary}
                     >
-                      <Download size={14} aria-hidden="true" /> CSV 내보내기
+                      <Download size={16} aria-hidden="true" /> CSV 내보내기
                     </button>
                     {section.id === 'people' && (
                       <button
                         type="button"
                         onClick={() => setEditing('new')}
-                        className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-3 text-xs font-semibold text-white hover:bg-[#4b2ee0]"
+                        className={saasUi.btnCompactPrimary}
                       >
-                        <Plus size={15} aria-hidden="true" /> 대상자 추가
+                        <Plus size={16} aria-hidden="true" /> 대상자 추가
                       </button>
                     )}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 px-5 pb-3.5">
-                  <label className="flex min-h-9 min-w-[180px] flex-1 items-center gap-2 rounded-lg border border-[#e4e1ec] bg-white px-3 text-[#62627a] focus-within:border-[#5b3df5]">
-                    <Search size={15} aria-hidden="true" />
+                <div className="flex flex-wrap gap-2.5 px-5 pb-4 sm:px-6">
+                  <label className="flex min-h-11 min-w-[200px] flex-1 items-center gap-2.5 rounded-xl border border-[#dcd8e8] bg-white px-3.5 text-[#565570] transition-colors focus-within:border-[#4c2ee6]">
+                    <Search size={16} aria-hidden="true" />
                     <input
                       name="q"
                       autoComplete="off"
@@ -581,7 +590,7 @@ export default function Home() {
                       placeholder="이름, 특징, 대안 검색…"
                       value={query}
                       onChange={(e) => filter('q', e.target.value)}
-                      className="w-full border-0 bg-transparent text-[13px] text-[#22213a] outline-none"
+                      className="w-full border-0 bg-transparent text-[15px] text-[#17162b] placeholder:text-[#7c7a94] outline-none"
                     />
                   </label>
                   <select
@@ -589,7 +598,7 @@ export default function Home() {
                     name="group"
                     value={group}
                     onChange={(e) => filter('group', e.target.value)}
-                    className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs text-[#22213a]"
+                    className={saasUi.select}
                   >
                     <option value="">전체 그룹</option>
                     {groups.map((g) => (
@@ -601,7 +610,7 @@ export default function Home() {
                     name="status"
                     value={status}
                     onChange={(e) => filter('status', e.target.value)}
-                    className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs text-[#22213a]"
+                    className={saasUi.select}
                   >
                     <option value="">전체 상태</option>
                     {statuses.map((s) => (
@@ -611,7 +620,7 @@ export default function Home() {
                 </div>
 
                 {/* Mobile Card List (< md) */}
-                <div className="divide-y divide-[#efedf5] border-t border-[#efedf5] md:hidden" role="region" aria-label="모바일 대상자 목록">
+                <div className="divide-y divide-[#e6e3f0] border-t border-[#e6e3f0] md:hidden" role="region" aria-label="모바일 대상자 목록">
                   {paginated.map((p, i) => {
                     const globalIdx = (currentPage - 1) * PAGE_SIZE + i;
                     const isCompleted = p.status === '완료';
@@ -635,41 +644,41 @@ export default function Home() {
                         : p.status === '일정 확정'
                         ? 'text-[#295dad]'
                         : p.status === '거절/보류'
-                        ? 'text-[#9b3c58]'
+                        ? 'text-[#9f1d45]'
                         : 'text-[#8b4d17]';
                     return (
-                      <article key={p.id} className="grid gap-2.5 px-4 py-3.5">
+                      <article key={p.id} className="grid gap-3 px-4 py-4">
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex min-w-0 items-center gap-3">
                             <span
-                              className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[globalIdx % 4]}`}
+                              className={`grid size-10 shrink-0 place-items-center rounded-xl text-[14px] font-extrabold ${avatarBg[globalIdx % 4]}`}
                               aria-hidden="true"
                             >
                               {p.name.slice(0, 1)}
                             </span>
                             <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 text-sm">
+                              <div className="flex items-center gap-1.5 text-[16px]">
                                 {isCompleted ? (
                                   <button
                                     type="button"
                                     onClick={() => setMobilePreviewId((curr) => (curr === p.id ? null : p.id))}
-                                    className="truncate text-left font-bold text-[#22213a] underline decoration-[#cfc1f3] decoration-dashed underline-offset-4"
+                                    className="truncate text-left font-bold text-[#17162b] underline decoration-[#c7b8f4] decoration-dashed underline-offset-4"
                                   >
                                     {p.name}
                                   </button>
                                 ) : (
-                                  <b className="truncate font-bold text-[#22213a]">{p.name}</b>
+                                  <b className="truncate font-bold text-[#17162b]">{p.name}</b>
                                 )}
-                                {p.sample && <span className="shrink-0 text-[11px] text-[#62627a]">· 예시</span>}
+                                {p.sample && <span className="shrink-0 text-[13px] font-medium text-[#565570]">· 예시</span>}
                               </div>
-                              <p className="truncate text-xs text-[#62627a]">{p.desc || '특징 미입력'}</p>
+                              <p className="truncate text-[14px] text-[#565570]">{p.desc || '특징 미입력'}</p>
                             </div>
                           </div>
-                          <span className={`shrink-0 text-xs font-bold ${statusStyle}`}>{p.status}</span>
+                          <span className={`shrink-0 text-[14px] font-bold ${statusStyle}`}>{p.status}</span>
                         </div>
 
-                        <div className="tnum flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#62627a]">
-                          <span className="font-semibold text-[#4d30cf]">{p.group}</span>
+                        <div className="tnum flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-[#565570]">
+                          <span className="font-bold text-[#4125cc]">{p.group}</span>
                           {p.source && (
                             <>
                               <span aria-hidden="true">·</span>
@@ -685,18 +694,20 @@ export default function Home() {
                         </div>
 
                         {isCompleted && expanded ? (
-                          <div className="grid gap-1.5 rounded-xl border border-[#d8cef7] bg-[#faf7ff] p-3 text-xs">
-                            <b className="font-bold text-[#4d30cf]">{p.name} 인터뷰 결과</b>
-                            <p className="whitespace-pre-wrap leading-relaxed text-[#22213a]">
+                          <div className="grid gap-2 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] p-4 text-[14px]">
+                            <b className="font-extrabold text-[#4125cc]">{p.name} 인터뷰 결과</b>
+                            <p className="whitespace-pre-wrap leading-relaxed text-[#17162b]">
                               {fullResultText || '아직 기록된 인터뷰 결과가 없어요. 아래 상세 편집이나 음성 녹음으로 내용을 기록해 보세요.'}
                             </p>
                             {p.alternative && (
-                              <span className="text-[11px] text-[#62627a]">현재 대안: {p.alternative}</span>
+                              <span className="text-[13px] text-[#565570]">
+                                현재 대안: <strong className="font-bold text-[#17162b]">{p.alternative}</strong>
+                              </span>
                             )}
                           </div>
                         ) : (
                           p.note && (
-                            <p className="line-clamp-2 rounded-lg bg-[#faf9fd] px-2.5 py-2 text-xs text-[#22213a]">
+                            <p className="line-clamp-2 rounded-xl bg-[#f8f7fc] px-3.5 py-2.5 text-[14px] text-[#17162b]">
                               {p.note}
                             </p>
                           )
@@ -706,14 +717,14 @@ export default function Home() {
                           <button
                             type="button"
                             onClick={() => setVoice(p)}
-                            className="inline-flex min-h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#e5dcfc] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf]"
+                            className={`${saasUi.btnCompactSoft} flex-1`}
                           >
-                            <Mic size={13} aria-hidden="true" /> 음성 녹음
+                            <Mic size={15} aria-hidden="true" /> 음성 녹음
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditing(p)}
-                            className="inline-flex min-h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a]"
+                            className={`${saasUi.btnCompactSecondary} flex-1`}
                           >
                             상세 편집
                           </button>
@@ -722,7 +733,7 @@ export default function Home() {
                     );
                   })}
                   {!filtered.length && (
-                    <p className="px-4 py-8 text-center text-sm text-[#62627a]">
+                    <p className="px-4 py-8 text-center text-[15px] text-[#565570]">
                       {people.length ? '검색 조건에 맞는 대상자가 없어요.' : '첫 인터뷰 대상자를 추가해 보세요.'}
                     </p>
                   )}
@@ -730,30 +741,30 @@ export default function Home() {
 
                 {/* Desktop Table (>= md) */}
                 <div className="hidden overflow-x-auto md:block md:overflow-visible" role="region" aria-label="대상자 목록" tabIndex={0}>
-                  <table className="w-full min-w-[640px] border-collapse text-left text-[13px] tnum">
+                  <table className="w-full min-w-[640px] border-collapse text-left text-[15px] tnum">
                     <thead>
-                      <tr className="border-t border-[#efedf5] bg-[#f8f8fc] text-xs font-semibold text-[#565771]">
-                        <th scope="col" className="py-2.5 pl-5 pr-3">
+                      <tr className="border-t border-[#e6e3f0] bg-[#f8f7fc] text-[14px] font-bold text-[#44435c]">
+                        <th scope="col" className="py-3.5 pl-6 pr-3">
                           이름 / 특징
                         </th>
-                        <th scope="col" className="px-3 py-2.5">
+                        <th scope="col" className="px-3 py-3.5">
                           그룹
                         </th>
-                        <th scope="col" className="px-3 py-2.5">
+                        <th scope="col" className="px-3 py-3.5">
                           섭외 경로
                         </th>
-                        <th scope="col" className="px-3 py-2.5">
+                        <th scope="col" className="px-3 py-3.5">
                           진행 상태
                         </th>
-                        <th scope="col" className="px-3 py-2.5">
+                        <th scope="col" className="px-3 py-3.5">
                           인터뷰 일시
                         </th>
-                        <th scope="col" className="py-2.5 pl-3 pr-5 text-right">
+                        <th scope="col" className="py-3.5 pl-3 pr-6 text-right">
                           <span className="sr-only">편집</span>
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#efedf5]">
+                    <tbody className="divide-y divide-[#e6e3f0]">
                       {paginated.map((p, i) => {
                         const globalIdx = (currentPage - 1) * PAGE_SIZE + i;
                         const isCompleted = p.status === '완료';
@@ -778,14 +789,14 @@ export default function Home() {
                             : p.status === '일정 확정'
                             ? 'text-[#295dad]'
                             : p.status === '거절/보류'
-                            ? 'text-[#9b3c58]'
+                            ? 'text-[#9f1d45]'
                             : 'text-[#8b4d17]';
                         return (
-                          <tr key={p.id} className="hover:bg-[#faf9ff]">
-                            <td className="py-2.5 pl-5 pr-3">
-                              <div className="flex items-center gap-2.5">
+                          <tr key={p.id} className="transition-colors hover:bg-[#faf9ff]">
+                            <td className="py-3.5 pl-6 pr-3">
+                              <div className="flex items-center gap-3">
                                 <span
-                                  className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarBg[globalIdx % 4]}`}
+                                  className={`grid size-10 shrink-0 place-items-center rounded-xl text-[14px] font-extrabold ${avatarBg[globalIdx % 4]}`}
                                   aria-hidden="true"
                                 >
                                   {p.name.slice(0, 1)}
@@ -808,7 +819,7 @@ export default function Home() {
                                             setHoveredPersonId((curr) => (curr === p.id ? null : curr))
                                           }
                                           onClick={() => setEditing(p)}
-                                          className="cursor-pointer text-left font-semibold text-[#22213a] underline decoration-[#cfc1f3] decoration-dashed underline-offset-4 hover:text-[#4d30cf]"
+                                          className="cursor-pointer text-left text-[16px] font-bold text-[#17162b] underline decoration-[#c7b8f4] decoration-dashed underline-offset-4 hover:text-[#4125cc]"
                                         >
                                           {p.name}
                                         </button>
@@ -816,27 +827,32 @@ export default function Home() {
                                         {showPopover && (
                                           <div
                                             role="tooltip"
-                                            className={`absolute left-0 z-40 w-80 max-w-[calc(100vw-48px)] ${
+                                            className={`absolute left-0 z-40 w-88 max-w-[calc(100vw-48px)] ${
                                               openUpward ? 'bottom-full pb-2' : 'top-full pt-2'
                                             }`}
                                           >
-                                            <div className="rounded-xl border border-[#d6c9fa] bg-white p-3.5 text-left shadow-xl">
-                                              <div className="flex items-center justify-between gap-2 border-b border-[#efedf6] pb-2">
-                                                <b className="text-xs font-bold text-[#22213a]">{p.name} 인터뷰 결과</b>
-                                                <span className="text-[11px] font-semibold text-[#14674d]">
+                                            <div className="rounded-2xl border border-[#dfd7fb] bg-white p-4.5 text-left shadow-xl">
+                                              <div className="flex items-center justify-between gap-2 border-b border-[#e6e3f0] pb-2.5">
+                                                <b className="text-[15px] font-extrabold text-[#17162b]">{p.name} 인터뷰 결과</b>
+                                                <span className="text-[13px] font-bold text-[#14674d]">
                                                   완료 · {p.group}
                                                 </span>
                                               </div>
-                                              <div className="mt-2 max-h-52 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-[#22213a]">
+                                              <div className="mt-3 max-h-52 overflow-y-auto whitespace-pre-wrap text-[14px] leading-relaxed text-[#17162b]">
                                                 {fullResultText ||
                                                   '기록된 인터뷰 결과가 아직 없어요. 이름을 클릭해 핵심 인사이트를 남기거나 음성 녹음을 진행해 보세요.'}
                                               </div>
                                               {(p.alternative || personVoices.length > 0 || p.date) && (
-                                                <div className="tnum mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#efedf6] pt-2 text-[11px] text-[#62627a]">
-                                                  {p.alternative && <span>현재 대안: {p.alternative}</span>}
+                                                <div className="tnum mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#e6e3f0] pt-2.5 text-[13px] font-medium text-[#565570]">
+                                                  {p.alternative && (
+                                                    <span>
+                                                      현재 대안: <strong className="font-bold text-[#17162b]">{p.alternative}</strong>
+                                                    </span>
+                                                  )}
                                                   {personVoices.length > 0 && (
                                                     <span>
-                                                      {p.alternative ? '· ' : ''}음성 STT {personVoices.length}건
+                                                      {p.alternative ? '· ' : ''}음성 STT{' '}
+                                                      <strong className="font-bold text-[#4125cc]">{personVoices.length}건</strong>
                                                     </span>
                                                   )}
                                                   {p.date && (
@@ -852,28 +868,28 @@ export default function Home() {
                                         )}
                                       </span>
                                     ) : (
-                                      <b className="font-semibold text-[#22213a]">{p.name}</b>
+                                      <b className="text-[16px] font-bold text-[#17162b]">{p.name}</b>
                                     )}
-                                    {p.sample && <span className="text-[11px] text-[#62627a]">· 예시</span>}
+                                    {p.sample && <span className="text-[13px] font-medium text-[#565570]">· 예시</span>}
                                   </div>
-                                  <span className="block truncate text-xs text-[#62627a]">{p.desc || '—'}</span>
+                                  <span className="block truncate text-[14px] text-[#565570]">{p.desc || '—'}</span>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-3 py-2.5 text-xs font-semibold text-[#4d30cf]">{p.group}</td>
-                            <td className="px-3 py-2.5 text-xs text-[#62627a]">{p.source || '—'}</td>
-                            <td className={`px-3 py-2.5 text-xs font-semibold ${statusStyle}`}>{p.status}</td>
-                            <td className="px-3 py-2.5 font-mono text-xs text-[#62627a]">
+                            <td className="px-3 py-3.5 text-[14px] font-bold text-[#4125cc]">{p.group}</td>
+                            <td className="px-3 py-3.5 text-[14px] text-[#565570]">{p.source || '—'}</td>
+                            <td className={`px-3 py-3.5 text-[14px] font-bold ${statusStyle}`}>{p.status}</td>
+                            <td className="px-3 py-3.5 font-mono text-[14px] text-[#565570]">
                               {p.date ? p.date.replace('T', ' ') : '—'}
                             </td>
-                            <td className="py-2.5 pl-3 pr-5 text-right">
+                            <td className="py-3.5 pl-3 pr-6 text-right">
                               <button
                                 type="button"
                                 aria-label={`${p.name} 상세 편집`}
                                 onClick={() => setEditing(p)}
-                                className="inline-grid size-8 place-items-center rounded-lg text-[#565571] hover:bg-[#eee8ff] hover:text-[#4d30cf]"
+                                className="inline-grid size-9 place-items-center rounded-xl text-[#565570] transition-colors hover:bg-[#efeaff] hover:text-[#4125cc]"
                               >
-                                <MoreHorizontal size={17} aria-hidden="true" />
+                                <MoreHorizontal size={18} aria-hidden="true" />
                               </button>
                             </td>
                           </tr>
@@ -882,15 +898,15 @@ export default function Home() {
                     </tbody>
                   </table>
                   {!filtered.length && (
-                    <p className="px-5 py-8 text-center text-sm text-[#62627a]">
+                    <p className="px-5 py-8 text-center text-[15px] text-[#565570]">
                       {people.length ? '검색 조건에 맞는 대상자가 없어요.' : '첫 인터뷰 대상자를 추가해 보세요.'}
                     </p>
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e9e7f1] px-5 py-3 text-xs text-[#62627a]">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e6e3f0] px-6 py-3.5 text-[14px] text-[#565570]">
                   <span className="tnum">
-                    대상자 {filtered.length}명
+                    대상자 <strong className="font-bold text-[#17162b]">{filtered.length}명</strong>
                     {filtered.length > PAGE_SIZE
                       ? ` (${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} 표시)`
                       : ''}
@@ -904,20 +920,20 @@ export default function Home() {
                           type="button"
                           disabled={currentPage <= 1}
                           onClick={() => setPage((p) => Math.max(1, p - 1))}
-                          className="inline-flex min-h-7 items-center gap-0.5 rounded-md border border-[#e2deee] bg-white px-2 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                          className="inline-flex min-h-9 items-center gap-0.5 rounded-xl border border-[#dcd8e8] bg-white px-3 text-[14px] font-bold text-[#17162b] hover:bg-[#f6f6fa] disabled:opacity-45"
                         >
-                          <ChevronLeft size={13} aria-hidden="true" /> 이전
+                          <ChevronLeft size={15} aria-hidden="true" /> 이전
                         </button>
-                        <span className="font-mono text-xs font-semibold text-[#22213a]">
+                        <span className="font-mono text-[14px] font-bold text-[#17162b]">
                           {currentPage} / {totalPages}
                         </span>
                         <button
                           type="button"
                           disabled={currentPage >= totalPages}
                           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                          className="inline-flex min-h-7 items-center gap-0.5 rounded-md border border-[#e2deee] bg-white px-2 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-45"
+                          className="inline-flex min-h-9 items-center gap-0.5 rounded-xl border border-[#dcd8e8] bg-white px-3 text-[14px] font-bold text-[#17162b] hover:bg-[#f6f6fa] disabled:opacity-45"
                         >
-                          다음 <ChevronRight size={13} aria-hidden="true" />
+                          다음 <ChevronRight size={15} aria-hidden="true" />
                         </button>
                       </div>
                     )}
@@ -925,7 +941,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setHideSamples(true)}
-                        className="font-bold text-[#5b3df5] hover:underline"
+                        className="font-bold text-[#4c2ee6] hover:underline"
                       >
                         예시 데이터 지우기
                       </button>
@@ -935,16 +951,18 @@ export default function Home() {
               </section>
 
               {section.id === 'home' && (
-                <aside className="grid gap-4 rounded-2xl border border-[#e9e7f1] bg-white p-5">
+                <aside className={`grid gap-4 ${saasUi.card} p-5.5`}>
                   <div>
-                    <span className="mb-2.5 grid size-9 place-items-center rounded-xl bg-[#eee8ff] text-[#5b3df5]">
-                      <SlidersHorizontal size={17} aria-hidden="true" />
+                    <span className="mb-3 grid size-10 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+                      <SlidersHorizontal size={19} aria-hidden="true" />
                     </span>
-                    <h2 className="text-base font-bold text-[#22213a]">그룹별 모집 현황</h2>
-                    <p className="mt-0.5 text-xs text-[#62627a]">각 그룹에서 3~5명을 만나 보세요.</p>
+                    <h2 className={saasUi.sectionTitle}>그룹별 모집 현황</h2>
+                    <p className="mt-1 text-[14px] text-[#565570]">
+                      각 그룹에서 <strong className="font-bold text-[#17162b]">3~5명</strong>을 만나 보세요.
+                    </p>
                   </div>
 
-                  <div className="grid gap-3.5">
+                  <div className="grid gap-4">
                     {groups.map((g, i) => {
                       const n = people.filter((p) => p.group === g && p.status !== '거절/보류').length;
                       const meterClass = i === 1 ? 'meter-alt' : i === 2 ? 'meter-churn' : '';
@@ -952,13 +970,13 @@ export default function Home() {
                         <Link
                           key={g}
                           to={`/?view=people&group=${encodeURIComponent(g)}`}
-                          className="grid gap-1.5 text-inherit no-underline hover:text-[#4d30cf]"
+                          className="grid gap-1.5 text-inherit no-underline hover:text-[#4125cc]"
                         >
-                          <div className="flex items-center justify-between text-[13px]">
-                            <b className="font-semibold">{g}</b>
-                            <span className="tnum text-xs font-bold text-[#4d30cf]">
+                          <div className="flex items-center justify-between text-[15px]">
+                            <b className="font-bold text-[#17162b]">{g}</b>
+                            <span className="tnum text-[15px] font-extrabold text-[#4125cc]">
                               {n}
-                              <span className="font-normal text-[#62627a]"> / 5명</span>
+                              <span className="font-medium text-[#565570]"> / 5명</span>
                             </span>
                           </div>
                           <progress className={`meter-progress ${meterClass}`} value={Math.min(n, 5)} max={5} />
@@ -970,9 +988,9 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setGuideMode('generate')}
-                    className="inline-flex w-fit items-center gap-1 text-xs font-bold text-[#5b3df5] hover:underline"
+                    className="inline-flex w-fit items-center gap-1 text-[14px] font-bold text-[#4c2ee6] hover:underline"
                   >
-                    모집 기준 · AI 가이드 보기 <ArrowRight size={14} aria-hidden="true" />
+                    모집 기준 · AI 가이드 보기 <ArrowRight size={15} aria-hidden="true" />
                   </button>
                 </aside>
               )}
@@ -986,35 +1004,35 @@ export default function Home() {
           {section.id === 'templates' && <ResearchTemplates onUseInGuide={openGuideFromTemplate} />}
 
           {section.id === 'insights' && (
-            <div className="grid gap-4">
+            <div className="grid gap-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="font-display text-2xl font-bold tracking-tight text-[#22213a]">인터뷰 기록 · 인사이트</h1>
-                  <p className="mt-1 text-[13px] text-[#62627a]">
+                  <h1 className={saasUi.pageTitle}>인터뷰 기록 · 인사이트</h1>
+                  <p className={saasUi.pageSubtitle}>
                     실시간 음성 녹음(STT) 기록과 대상자별 핵심 발견을 관리하고 AI로 자동 분석해요.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => void exportCollectedTexts()}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3.5 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                    className={saasUi.btnSecondary}
                   >
-                    <Download size={15} aria-hidden="true" /> 수집 텍스트 CSV
+                    <Download size={16} aria-hidden="true" /> 수집 텍스트 CSV
                   </button>
                   <button
                     type="button"
                     onClick={() => void exportAllResearchCsv()}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3.5 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                    className={saasUi.btnSecondary}
                   >
-                    <Download size={15} aria-hidden="true" /> 리서치·분석 통합 CSV
+                    <Download size={16} aria-hidden="true" /> 리서치·분석 통합 CSV
                   </button>
                   <button
                     type="button"
                     onClick={() => setVoice('pick')}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-white px-4 text-sm font-semibold text-[#4d30cf] hover:bg-[#faf8ff]"
+                    className={saasUi.btnSoft}
                   >
-                    <Mic size={15} aria-hidden="true" /> 실시간 음성 녹음 · STT
+                    <Mic size={16} aria-hidden="true" /> 실시간 음성 녹음 · STT
                   </button>
                   <button
                     type="button"
@@ -1028,9 +1046,9 @@ export default function Home() {
                         text: allNotes,
                       });
                     }}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                    className={saasUi.btnSecondary}
                   >
-                    <FileText size={15} className="text-[#5b3df5]" aria-hidden="true" /> 텍스트 요약
+                    <FileText size={16} className="text-[#4c2ee6]" aria-hidden="true" /> 텍스트 요약
                   </button>
                   <button
                     type="button"
@@ -1038,9 +1056,9 @@ export default function Home() {
                       setGuideDraftNotes('');
                       setGuideMode('analyze');
                     }}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
+                    className={saasUi.btnPrimary}
                   >
-                    <Sparkles size={15} aria-hidden="true" /> AI 인터뷰 질문·답변 분석
+                    <Sparkles size={16} aria-hidden="true" /> AI 인터뷰 질문·답변 분석
                   </button>
                 </div>
               </div>
@@ -1052,45 +1070,45 @@ export default function Home() {
 
               <InterviewSentimentPanel people={people} />
 
-              <section className="overflow-hidden rounded-2xl border border-[#e9e7f1] bg-white">
-                <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
-                  <h2 className="text-base font-bold text-[#22213a]">저장된 인터뷰 기록 {noteCount}개</h2>
+              <section className={`overflow-hidden ${saasUi.card}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4.5">
+                  <h2 className={saasUi.sectionTitle}>저장된 인터뷰 기록 {noteCount}개</h2>
                   <button
                     type="button"
                     onClick={() => setGuideMode('generate')}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                    className={saasUi.btnCompactSecondary}
                   >
-                    <BookOpen size={14} aria-hidden="true" /> 인터뷰 질문 보기
+                    <BookOpen size={16} aria-hidden="true" /> 인터뷰 질문 보기
                   </button>
                 </div>
 
                 {noteCount ? (
-                  <ul className="divide-y divide-[#e9e7f1] border-t border-[#e9e7f1]">
+                  <ul className="divide-y divide-[#e6e3f0] border-t border-[#e6e3f0]">
                     {people
                       .filter((p) => p.note)
                       .map((p) => (
-                        <li key={p.id} className="grid gap-2 px-5 py-4">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center gap-2 text-xs">
-                              <b className="text-sm font-bold text-[#22213a]">{p.name}</b>
-                              <span className="font-semibold text-[#4d30cf]">{p.group}</span>
+                        <li key={p.id} className="grid gap-2.5 px-6 py-5 transition-colors hover:bg-[#faf9fd]/60">
+                          <div className="flex flex-wrap items-center justify-between gap-2.5">
+                            <div className="flex flex-wrap items-center gap-2 text-[14px]">
+                              <b className="text-[16px] font-extrabold text-[#17162b]">{p.name}</b>
+                              <span className="font-bold text-[#4125cc]">{p.group}</span>
                               {p.alternative && (
                                 <>
-                                  <span aria-hidden="true" className="text-[#62627a]">
+                                  <span aria-hidden="true" className="text-[#7c7a94]">
                                     ·
                                   </span>
-                                  <span className="text-[#62627a]">현재 대안: {p.alternative}</span>
+                                  <span className="text-[#565570]">현재 대안: {p.alternative}</span>
                                 </>
                               )}
-                              {p.sample && <span className="text-[#62627a]">· 예시</span>}
+                              {p.sample && <span className="text-[#7c7a94]">· 예시</span>}
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => setVoice(p)}
-                                className="inline-flex min-h-7 items-center gap-1 rounded-md border border-[#e5dcfc] bg-[#faf8ff] px-2.5 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee8ff]"
+                                className={saasUi.btnCompactSoft}
                               >
-                                <Mic size={12} aria-hidden="true" /> 음성 녹음
+                                <Mic size={15} aria-hidden="true" /> 음성 녹음
                               </button>
                               <button
                                 type="button"
@@ -1100,9 +1118,9 @@ export default function Home() {
                                     text: p.note,
                                   })
                                 }
-                                className="inline-flex min-h-7 items-center gap-1 rounded-md border border-[#e2deee] bg-white px-2.5 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                                className={saasUi.btnCompactSecondary}
                               >
-                                <FileText size={12} className="text-[#5b3df5]" aria-hidden="true" /> 요약하기
+                                <FileText size={15} className="text-[#4c2ee6]" aria-hidden="true" /> 요약하기
                               </button>
                               <button
                                 type="button"
@@ -1111,17 +1129,17 @@ export default function Home() {
                                   setGuideDraftNotes(`- ${p.name}(${p.group}):\n${p.note}`);
                                   setGuideMode('analyze');
                                 }}
-                                className="inline-flex min-h-7 items-center gap-1 rounded-md border border-[#e2deee] bg-white px-2.5 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                                className={saasUi.btnCompactSecondary}
                               >
-                                <Sparkles size={12} className="text-[#5b3df5]" aria-hidden="true" /> AI 분석기에 넣기
+                                <Sparkles size={15} className="text-[#4c2ee6]" aria-hidden="true" /> AI 분석기에 넣기
                               </button>
                             </div>
                           </div>
-                          <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#22213a]">{p.note}</p>
+                          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[#17162b]">{p.note}</p>
                           <button
                             type="button"
                             onClick={() => setEditing(p)}
-                            className="w-fit text-xs font-bold text-[#5b3df5] hover:underline"
+                            className="w-fit text-[14px] font-bold text-[#4c2ee6] hover:underline"
                           >
                             기록 편집
                           </button>
@@ -1129,7 +1147,7 @@ export default function Home() {
                       ))}
                   </ul>
                 ) : (
-                  <p className="border-t border-[#e9e7f1] px-5 py-8 text-center text-sm text-[#62627a]">
+                  <p className="border-t border-[#e6e3f0] px-6 py-9 text-center text-[15px] text-[#565570]">
                     실시간 음성 녹음(STT)을 진행하거나 대상자 상세 화면에서 인터뷰 인사이트를 기록하면 여기에 자동으로 저장돼요.
                   </p>
                 )}
@@ -1138,7 +1156,7 @@ export default function Home() {
           )}
         </main>
 
-        <footer className="mx-auto hidden max-w-[1400px] px-4 py-6 text-xs text-[#62627a] sm:px-8 lg:block">
+        <footer className="mx-auto hidden max-w-[1440px] px-4 py-6 text-[14px] text-[#565570] sm:px-8 lg:block">
           리서치랩 · 고객 인터뷰와 연구 설문
         </footer>
       </div>
@@ -1146,7 +1164,7 @@ export default function Home() {
       {/* Mobile Bottom Navigation (< lg) */}
       <nav
         aria-label="모바일 하단 메뉴"
-        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[#e9e7f1] bg-white/95 px-1 py-1.5 backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-[#e6e3f0] bg-white/95 px-1.5 py-2 backdrop-blur lg:hidden"
       >
         {sections.map(({ id, shortName, icon: Icon }) => {
           const active = section.id === id;
@@ -1155,11 +1173,11 @@ export default function Home() {
               key={id}
               to={id === 'home' ? '/' : `/?view=${id}`}
               aria-current={active ? 'page' : undefined}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1 text-[11px] font-semibold transition-colors ${
-                active ? 'text-[#5b3df5] font-bold' : 'text-[#62627a]'
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[13px] font-semibold transition-colors ${
+                active ? 'bg-[#f4f1ff] font-bold text-[#4c2ee6]' : 'text-[#565570]'
               }`}
             >
-              <Icon size={18} aria-hidden="true" />
+              <Icon size={19} aria-hidden="true" />
               <span className="truncate">{shortName}</span>
             </Link>
           );
@@ -1193,13 +1211,13 @@ export default function Home() {
       {voice === 'pick' && (
         <Modal title="실시간 음성 인터뷰 · 자동 STT" close={() => setVoice(null)}>
           <div className="grid gap-4">
-            <p className="text-sm text-[#62627a]">
+            <p className="text-[15px] leading-relaxed text-[#565570]">
               마이크로 인터뷰를 녹음하면 음성이 텍스트로 변환되어 선택한 대상자의 인터뷰 기록 공간에 자동으로 저장돼요.
             </p>
 
             {people.length > 0 && (
               <form
-                className="grid gap-3 rounded-xl border border-[#e9e7f1] bg-[#faf9fd] p-3.5"
+                className={`grid gap-3 p-4 ${saasUi.inset}`}
                 onSubmit={(e) => {
                   e.preventDefault();
                   const id = new FormData(e.currentTarget).get('voice-person');
@@ -1207,13 +1225,13 @@ export default function Home() {
                   if (p) setVoice(p);
                 }}
               >
-                <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
+                <label className={saasUi.labelText}>
                   기존 대상자 선택
                   <select
                     name="voice-person"
                     defaultValue={customPeople.length === 1 ? customPeople[0].id : people[0]?.id ?? ''}
                     required
-                    className="min-h-10 rounded-lg border border-[#dfdce9] bg-white px-3 text-sm font-normal text-[#22213a]"
+                    className={`w-full ${saasUi.select}`}
                   >
                     <option value="">대상자 선택</option>
                     {customPeople.length > 0 && (
@@ -1240,15 +1258,15 @@ export default function Home() {
                 </label>
                 <button
                   type="submit"
-                  className="inline-flex min-h-10 w-fit items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
+                  className={`w-fit ${saasUi.btnPrimary}`}
                 >
-                  <Mic size={16} aria-hidden="true" /> 녹음 · STT 화면 열기
+                  <Mic size={17} aria-hidden="true" /> 녹음 · STT 화면 열기
                 </button>
               </form>
             )}
 
             <form
-              className="grid gap-2.5 rounded-xl border border-[#e5dcfc] bg-[#faf7ff] p-3.5"
+              className={`grid gap-3 p-4 ${saasUi.cardSoft}`}
               onSubmit={(e) => {
                 e.preventDefault();
                 const clean = quickVoiceName.trim();
@@ -1270,7 +1288,7 @@ export default function Home() {
                 setVoice(created);
               }}
             >
-              <label className="grid gap-1 text-[13px] font-semibold text-[#22213a]">
+              <label className={saasUi.labelText}>
                 새 대상자 이름으로 바로 녹음 시작
                 <div className="flex flex-wrap gap-2">
                   <input
@@ -1280,13 +1298,13 @@ export default function Home() {
                     value={quickVoiceName}
                     onChange={(e) => setQuickVoiceName(e.target.value)}
                     placeholder="예: 참여자 A (30대 마케터)"
-                    className="min-h-10 min-w-[180px] flex-1 rounded-lg border border-[#dfdce9] bg-white px-3 text-sm font-normal text-[#22213a]"
+                    className={`min-w-[180px] flex-1 ${saasUi.input}`}
                   />
                   <button
                     type="submit"
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-[#5b3df5] bg-white px-3.5 text-xs font-bold text-[#4d30cf] hover:bg-[#eee8ff]"
+                    className={saasUi.btnSoft}
                   >
-                    <Plus size={14} aria-hidden="true" /> 등록 후 바로 녹음
+                    <Plus size={16} aria-hidden="true" /> 등록 후 바로 녹음
                   </button>
                 </div>
               </label>
@@ -1326,7 +1344,7 @@ export default function Home() {
           }}
           wide
         >
-          <div className="grid gap-4">
+          <div className="grid gap-5">
             <QuestionGenerator
               key={`${guideMode}-${guideDraftQuestions.slice(0, 20)}-${guideDraftNotes.slice(0, 20)}`}
               initialMode={guideMode}
@@ -1342,40 +1360,66 @@ export default function Home() {
               onSaveInsight={appendPersonInsight}
             />
 
-            <details className="rounded-xl border border-[#e8ddfb] bg-[#f8f4ff] p-3.5 text-[13px]">
-              <summary className="flex flex-wrap items-center justify-between gap-2 font-bold text-[#4d30cf]">
+            <details className={`p-4 text-[15px] ${saasUi.cardSoft}`}>
+              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 font-bold text-[#4125cc]">
                 <span>{webtoonTopic}</span>
-                <span className="text-xs font-normal text-[#62627a]">고객검증 인터뷰 {webtoonInterview.length}문항</span>
+                <span className="text-[14px] font-normal text-[#565570]">고객검증 인터뷰 {webtoonInterview.length}문항</span>
               </summary>
-              <div className="mt-3 grid gap-2.5">
-                <p className="text-[#22213a]">
+              <div className="mt-3.5 grid gap-3">
+                <p className="leading-relaxed text-[#17162b]">
                   소개부터 하지 말고 최근에 있었던 일을 먼저 물어보세요. 서비스 아이디어는 5번에서 처음 보여 주세요.
                 </p>
-                <ol className="grid gap-2 pl-5 list-decimal">
+                <ol className="list-decimal grid gap-2.5 pl-5">
                   {webtoonInterview.map(({ stage, prompt }) => (
                     <li key={stage}>
-                      <b className="font-semibold text-[#22213a]">{stage}</b>
-                      <p className="text-[#62627a]">{prompt}</p>
+                      <b className="font-bold text-[#17162b]">{stage}</b>
+                      <p className="mt-0.5 text-[#565570]">{prompt}</p>
                     </li>
                   ))}
                 </ol>
                 <Link
                   to="/?view=surveys&new=1&template=webtoon"
                   onClick={() => setGuideMode(null)}
-                  className="inline-flex min-h-9 w-fit items-center gap-1.5 rounded-lg border border-[#d8cef7] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#faf8ff]"
+                  className={`w-fit ${saasUi.btnCompactSoft}`}
                 >
-                  웹툰 고객검증 설문 만들기 <ArrowRight size={14} aria-hidden="true" />
+                  웹툰 고객검증 설문 만들기 <ArrowRight size={15} aria-hidden="true" />
                 </Link>
               </div>
             </details>
 
-            <div className="grid gap-3 text-[13px] text-[#22213a]">
+            <div className="grid gap-4 text-[15px] text-[#17162b]">
+              <div className="rounded-xl border border-[#e6e3f0] bg-[#faf9fd] p-4">
+                <h3 className="text-[16px] font-extrabold text-[#17162b]">
+                  VPC · CPF 인터뷰 질문지 작성 6단계 (실습 가이드)
+                </h3>
+                <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[14px] leading-relaxed text-[#44435c]">
+                  <li>
+                    <b className="text-[#17162b]">CPF 핵심가설 정리:</b> VPC 작성 내용을 바탕으로 고객군·고객 원형(최종사용자·구매자·의사결정자)별 고객 가설과 문제 가설을 정리해요.
+                  </li>
+                  <li>
+                    <b className="text-[#17162b]">핵심질문 도출:</b> 문제 상황에서 무엇이 가장 불편한지, 이유·시간·비용·기존 대체재 불만을 묻는 질문을 설계해요.
+                  </li>
+                  <li>
+                    <b className="text-[#17162b]">고객 가설 질문 (JTBD):</b> 고객의 특성과 실제 수행 행동을 확인하는 질문을 작성해요.
+                  </li>
+                  <li>
+                    <b className="text-[#17162b]">문제 가설 & 강도 질문:</b> 특정 행동에서 겪는 문제와 빈도·비용·시간 등 숫자 판단근거를 확인해요.
+                  </li>
+                  <li>
+                    <b className="text-[#17162b]">현재 행동 · 기존 대안 확인:</b> 문제 해결을 위해 현재 쓰는 대안과 계속 쓰는 이유를 질문해요.
+                  </li>
+                  <li>
+                    <b className="text-[#17162b]">질문 3원칙 최종 검토:</b> 제품·서비스 평가나 미래형(&quot;Would you?&quot;) 질문이 아닌지, 가설을 검증할 수 있는지 검토해요.
+                  </li>
+                </ol>
+              </div>
+
               <div>
-                <h3 className="text-sm font-bold">누구를 만날까요?</h3>
-                <p className="mt-1 text-[#62627a]">
-                  세 그룹에서 각각 3~5명을 모집해 서로 다른 경험을 비교해 보세요. 지인 외 경로에서도 참여자를 찾아보세요.
+                <h3 className="text-[16px] font-extrabold text-[#17162b]">누구를 만날까요? (고객군 · 고객 원형)</h3>
+                <p className="mt-1.5 leading-relaxed text-[#565570]">
+                  기초 탐색에서는 <b className="text-[#17162b]">최종사용자 · 구매자 · (최종)의사결정자</b> 원형을 우선으로, 세 그룹에서 각각 3~5명을 모집해 반복 패턴을 찾고 후속 인터뷰이도 추천받아 보세요.
                 </p>
-                <ul className="mt-2 list-disc space-y-1 pl-5">
+                <ul className="mt-2.5 list-disc space-y-1.5 pl-5">
                   {groups.map((g, i) => (
                     <li key={g}>
                       <b>{g}</b> · {groupInfo[i]}
@@ -1385,8 +1429,8 @@ export default function Home() {
               </div>
 
               <div>
-                <h3 className="text-sm font-bold">인터뷰 기본 질문 예시</h3>
-                <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-[#62627a]">
+                <h3 className="text-[16px] font-extrabold text-[#17162b]">인터뷰 질문 순서 · 기본 예시 (문제 탐색 → 강도 → 대안)</h3>
+                <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[#565570]">
                   {interviewPrompts.map((p) => (
                     <li key={p}>{p}</li>
                   ))}
@@ -1399,12 +1443,12 @@ export default function Home() {
 
       {hideSamples && (
         <Modal title="예시 데이터를 지울까요?" close={() => setHideSamples(false)}>
-          <p className="text-sm text-[#62627a]">직접 추가한 대상자는 그대로 남아요.</p>
-          <div className="mt-4 flex justify-end gap-2">
+          <p className="text-[15px] leading-relaxed text-[#565570]">직접 추가한 대상자는 그대로 남아요.</p>
+          <div className="mt-5 flex justify-end gap-2.5">
             <button
               type="button"
               onClick={() => setHideSamples(false)}
-              className="min-h-10 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a]"
+              className={saasUi.btnSecondary}
             >
               취소
             </button>
@@ -1415,7 +1459,7 @@ export default function Home() {
                 setHideSamples(false);
                 setNotice('예시 데이터를 지웠어요.');
               }}
-              className="min-h-10 rounded-lg bg-[#a6214e] px-4 text-sm font-semibold text-white"
+              className={saasUi.btnDanger}
             >
               예시 지우기
             </button>
@@ -1454,23 +1498,23 @@ export default function Home() {
 
 function HeroArt() {
   return (
-    <svg className="hidden h-44 w-72 shrink-0 md:block" viewBox="0 0 390 224" fill="none" aria-hidden="true">
+    <svg className="hidden h-48 w-76 shrink-0 lg:block" viewBox="0 0 390 224" fill="none" aria-hidden="true">
       <path
         d="M15 161C54 191 125 192 199 166S328 100 375 117M38 185C109 203 178 199 235 174S338 131 380 141"
-        stroke="#d3c4fa"
+        stroke="#ddd6f8"
         strokeDasharray="4 7"
       />
-      <circle cx="216" cy="111" r="101" fill="#e6dbff" />
-      <circle cx="216" cy="111" r="82" stroke="#f4efff" />
+      <circle cx="216" cy="111" r="101" fill="#f3efff" />
+      <circle cx="216" cy="111" r="82" stroke="#e5dcfe" />
       <g transform="translate(129 31) rotate(-10 66 80)">
-        <rect x="7" y="9" width="140" height="168" rx="16" fill="#b49af4" />
-        <rect width="140" height="168" rx="16" fill="#fff" stroke="#b69df1" />
-        <path d="M0 31H140" stroke="#e9ddff" />
-        <path d="M32 -4v16M61 -4v16M91 -4v16M116 -4v16" stroke="#9e7ce9" strokeWidth="5" strokeLinecap="round" />
-        <path d="M50 57h60M50 87h55M50 118h65M50 144h39" stroke="#d7c7fc" strokeWidth="5" strokeLinecap="round" />
+        <rect x="7" y="9" width="140" height="168" rx="16" fill="#d9cefc" />
+        <rect width="140" height="168" rx="16" fill="#fff" stroke="#c3b4f5" />
+        <path d="M0 31H140" stroke="#ece6fe" />
+        <path d="M32 -4v16M61 -4v16M91 -4v16M116 -4v16" stroke="#8565ea" strokeWidth="5" strokeLinecap="round" />
+        <path d="M50 57h60M50 87h55M50 118h65M50 144h39" stroke="#ddd2fd" strokeWidth="5" strokeLinecap="round" />
         <path
           d="M21 57l4 4 8-9m-12 35 4 4 8-9m-12 36 4 4 8-9"
-          stroke="#7654db"
+          stroke="#4c2ee6"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -1479,17 +1523,17 @@ function HeroArt() {
       <g transform="translate(226 66) rotate(10 52 33)">
         <path
           d="M17 0h78a16 16 0 0 1 16 16v33a16 16 0 0 1-16 16H44L25 79V65h-8A17 17 0 0 1 0 48V17A17 17 0 0 1 17 0Z"
-          fill="#5b3df5"
+          fill="#4c2ee6"
         />
         <circle cx="32" cy="33" r="4" fill="#fff" />
         <circle cx="55" cy="33" r="4" fill="#fff" />
         <circle cx="78" cy="33" r="4" fill="#fff" />
       </g>
       <g transform="translate(79 113) rotate(-10 37 22)">
-        <rect width="76" height="46" rx="12" fill="#fff" stroke="#d0bcfd" />
+        <rect width="76" height="46" rx="12" fill="#fff" stroke="#d5c8fb" />
         <path
           d="M13 24h8l4-9 6 18 7-22 6 20 5-11 4 4h10"
-          stroke="#9b79ee"
+          stroke="#7554e8"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"

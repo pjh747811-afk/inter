@@ -6,6 +6,7 @@ import { questionGuideKey, type QuestionGuide } from '../lib/questionGuide';
 import { types, type Person, type SurveySummary } from '../lib/research';
 import { exportInsightReportCsv } from '../lib/researchCsv';
 import { computeQuestionDistributions } from '../lib/surveyAnalytics';
+import { saasUi } from './ResearchUI';
 
 export const insightReportKey = 'research.insight-report.v1';
 
@@ -269,21 +270,21 @@ export function AiInsightReportPanel({
   return (
     <section
       aria-labelledby="ai-insight-report-heading"
-      className="grid gap-4 rounded-2xl border border-[#e9e7f1] bg-white p-5"
+      className={`grid gap-5 ${saasUi.card} p-5 sm:p-6`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eee8ff] text-[#4d30cf]">
-            <FileText size={19} aria-hidden="true" />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#efeaff] text-[#4125cc]">
+            <FileText size={21} aria-hidden="true" />
           </span>
           <div>
-            <h2 id="ai-insight-report-heading" className="text-base font-bold text-[#22213a]">
+            <h2 id="ai-insight-report-heading" className={saasUi.sectionTitle}>
               AI 통합 인사이트 리포트
             </h2>
-            <p className="mt-0.5 text-[13px] text-[#62627a]">
+            <p className="mt-1 text-[15px] leading-relaxed text-[#565570]">
               수집된 인터뷰 기록(메모 · 음성 STT)과 설문 응답 데이터를 교차 분석해 핵심 통찰과 실행 제안을 요약해요.
             </p>
-            <p className="tnum mt-1.5 flex flex-wrap items-center gap-2 text-xs font-medium text-[#54546d]">
+            <p className="tnum mt-2 flex flex-wrap items-center gap-2 text-[14px] font-semibold text-[#44435c]">
               <span>분석 대상: 인터뷰 기록 {compiledInterviews.length}건</span>
               <span aria-hidden="true">·</span>
               <span>음성 STT {voiceTranscriptCount}건</span>
@@ -299,15 +300,15 @@ export function AiInsightReportPanel({
           type="button"
           disabled={busy || (compiledInterviews.length === 0 && compiledSurveys.length === 0)}
           onClick={() => void handleGenerateReport()}
-          className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+          className={saasUi.btnPrimary}
         >
-          <Sparkles size={15} aria-hidden="true" />
+          <Sparkles size={16} aria-hidden="true" />
           {busy ? '데이터 교차 분석 중…' : report ? '리포트 새로 생성' : 'AI 인사이트 리포트 생성'}
         </button>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 border-t border-[#efedf6] pt-3.5">
-        <label className="grid min-w-[220px] flex-1 gap-1 text-xs font-semibold text-[#22213a]">
+      <div className="flex flex-wrap items-end gap-4 border-t border-[#e6e3f0] pt-4">
+        <label className="grid min-w-[240px] flex-1 gap-1.5 text-[14px] font-bold text-[#17162b]">
           리서치 주제 · 검증 목표 (선택)
           <input
             type="text"
@@ -316,18 +317,18 @@ export function AiInsightReportPanel({
             disabled={busy}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="예: 프리랜서 정산 자동화 서비스 초기 문제·수요 검증"
-            className="min-h-9 w-full rounded-lg border border-[#dfdce9] bg-[#faf9fd] px-3 text-[13px] font-normal text-[#22213a] focus:border-[#5b3df5] focus:bg-white focus:outline-none"
+            className={`${saasUi.input} bg-[#faf9fd] focus:bg-white`}
           />
         </label>
 
         {hasSamples && (
-          <label className="flex min-h-9 shrink-0 items-center gap-2 text-xs font-medium text-[#54546d]">
+          <label className="flex min-h-11 shrink-0 items-center gap-2 text-[14px] font-semibold text-[#44435c]">
             <input
               type="checkbox"
               checked={includeSamples}
               disabled={busy}
               onChange={(e) => setIncludeSamples(e.target.checked)}
-              className="size-4 accent-[#5b3df5]"
+              className="size-4.5 accent-[#4c2ee6]"
             />
             예시 대상자 기록도 포함
           </label>
@@ -335,32 +336,32 @@ export function AiInsightReportPanel({
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg border border-[#f5c7d0] bg-[#fff3f5] px-3.5 py-2.5 text-[13px] font-medium text-[#9f233f]">
+        <p role="alert" className="rounded-xl border border-[#f5c7d0] bg-[#fff3f5] px-4 py-3 text-[15px] font-medium text-[#9f1d45]">
           {error}
         </p>
       )}
 
       {notice && (
-        <p role="status" className="rounded-lg border border-[#d6c9fa] bg-[#eee8ff] px-3.5 py-2.5 text-[13px] font-medium text-[#4d30cf]">
+        <p role="status" className="rounded-xl border border-[#d6c9fa] bg-[#f4f0ff] px-4 py-3 text-[15px] font-medium text-[#4125cc]">
           {notice}
         </p>
       )}
 
       {!report && !busy && (
-        <div className="rounded-xl border border-[#efedf6] bg-[#faf9fd] px-4 py-5 text-[13px] text-[#62627a]">
-          상단의 <b className="font-semibold text-[#22213a]">AI 인사이트 리포트 생성</b> 버튼을 누르면 수집된 인터뷰 텍스트와 설문 응답 분포·원문을 한데 모아 핵심 통찰, 사용자 세그먼트, 즉시 실행 액션을 한 장의 리포트로 요약해 드립니다.
+        <div className={`${saasUi.inset} px-5 py-6 text-[15px] leading-relaxed text-[#565570]`}>
+          상단의 <b className="font-bold text-[#17162b]">AI 인사이트 리포트 생성</b> 버튼을 누르면 수집된 인터뷰 텍스트와 설문 응답 분포·원문을 한데 모아 핵심 통찰, 사용자 세그먼트, 즉시 실행 액션을 한 장의 리포트로 요약해 드립니다.
         </div>
       )}
 
       {report && (
-        <div className="grid gap-4 border-t border-[#efedf6] pt-4">
+        <div className="grid gap-5 border-t border-[#e6e3f0] pt-5">
           {/* Report Header & Export Controls */}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="grid gap-1">
-              <h3 className="font-display text-lg font-extrabold tracking-tight text-[#22213a]">
+              <h3 className="font-display text-[21px] font-extrabold tracking-tight text-[#17162b]">
                 {report.reportTitle}
               </h3>
-              <p className="tnum flex flex-wrap items-center gap-2 text-xs text-[#62627a]">
+              <p className="tnum flex flex-wrap items-center gap-2 text-[14px] text-[#565570]">
                 <span>생성: {dateFormatter.format(new Date(report.generatedAt))}</span>
                 <span aria-hidden="true">·</span>
                 <span>{report.dataCoverage}</span>
@@ -371,15 +372,15 @@ export function AiInsightReportPanel({
               <button
                 type="button"
                 onClick={() => void handleCopyMarkdown()}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                className={saasUi.btnCompactSecondary}
               >
                 {copied ? (
                   <>
-                    <Check size={14} className="text-[#14674d]" aria-hidden="true" /> 복사 완료
+                    <Check size={15} className="text-[#14674d]" aria-hidden="true" /> 복사 완료
                   </>
                 ) : (
                   <>
-                    <Copy size={14} aria-hidden="true" /> 리포트 복사
+                    <Copy size={15} aria-hidden="true" /> 리포트 복사
                   </>
                 )}
               </button>
@@ -389,49 +390,49 @@ export function AiInsightReportPanel({
                   const file = exportInsightReportCsv(report);
                   setNotice(`AI 인사이트 리포트를 CSV(${file})로 다운로드했어요.`);
                 }}
-                className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                className={saasUi.btnCompactSecondary}
               >
-                <Download size={14} aria-hidden="true" /> 리포트 CSV
+                <Download size={15} aria-hidden="true" /> 리포트 CSV
               </button>
             </div>
           </div>
 
           {/* Executive Summary + Cross-Analysis */}
-          <div className="grid gap-3 lg:grid-cols-2">
-            <div className="grid gap-1.5 rounded-xl border border-[#e8ddfb] bg-[#faf7ff] p-4">
-              <h4 className="text-xs font-bold text-[#4d30cf]">핵심 요약 (Executive Summary)</h4>
-              <p className="text-[13px] leading-relaxed text-[#22213a]">{report.executiveSummary}</p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className={`grid gap-2 ${saasUi.cardSoft} p-5`}>
+              <h4 className="text-[14px] font-extrabold text-[#4125cc]">핵심 요약 (Executive Summary)</h4>
+              <p className="text-[15px] leading-relaxed text-[#17162b]">{report.executiveSummary}</p>
             </div>
-            <div className="grid gap-1.5 rounded-xl border border-[#efedf6] bg-[#faf9fd] p-4">
-              <h4 className="text-xs font-bold text-[#22213a]">인터뷰 · 설문 교차 비교</h4>
-              <p className="text-[13px] leading-relaxed text-[#54546d]">{report.interviewVsSurveyAlignment}</p>
+            <div className={`grid gap-2 ${saasUi.inset} p-5`}>
+              <h4 className="text-[14px] font-extrabold text-[#17162b]">인터뷰 · 설문 교차 비교</h4>
+              <p className="text-[15px] leading-relaxed text-[#44435c]">{report.interviewVsSurveyAlignment}</p>
             </div>
           </div>
 
           {/* Key Insights */}
-          <div className="grid gap-2">
-            <h4 className="text-sm font-bold text-[#22213a]">주요 통찰 {report.keyInsights.length}가지</h4>
-            <ol className="divide-y divide-[#efedf6] rounded-xl border border-[#efedf6]">
+          <div className="grid gap-2.5">
+            <h4 className="text-[16px] font-bold text-[#17162b]">주요 통찰 {report.keyInsights.length}가지</h4>
+            <ol className="divide-y divide-[#e6e3f0] rounded-xl border border-[#e4e1ef]">
               {report.keyInsights.map((item, idx) => {
                 const confColor =
                   item.confidence === '높음'
                     ? 'text-[#14674d]'
                     : item.confidence === '추가 검증 필요'
-                    ? 'text-[#9f233f]'
-                    : 'text-[#4d30cf]';
+                    ? 'text-[#9f1d45]'
+                    : 'text-[#4125cc]';
                 return (
-                  <li key={idx} className="grid gap-1.5 px-4 py-3.5">
+                  <li key={idx} className="grid gap-2 px-5 py-4">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <b className="tnum text-sm font-bold text-[#22213a]">
+                      <b className="tnum text-[16px] font-bold text-[#17162b]">
                         0{idx + 1}. {item.title}
                       </b>
-                      <span className={`text-xs font-semibold ${confColor}`}>신뢰도 · {item.confidence}</span>
+                      <span className={`text-[14px] font-bold ${confColor}`}>신뢰도 · {item.confidence}</span>
                     </div>
-                    <p className="text-xs leading-relaxed text-[#54546d]">
-                      <b className="font-semibold text-[#22213a]">근거:</b> {item.evidence}
+                    <p className="text-[14px] leading-relaxed text-[#44435c]">
+                      <b className="font-bold text-[#17162b]">근거:</b> {item.evidence}
                     </p>
-                    <p className="text-xs leading-relaxed text-[#4d30cf]">
-                      <b className="font-semibold">시사점:</b> {item.implication}
+                    <p className="text-[14px] leading-relaxed text-[#4125cc]">
+                      <b className="font-bold">시사점:</b> {item.implication}
                     </p>
                   </li>
                 );
@@ -441,27 +442,27 @@ export function AiInsightReportPanel({
 
           {/* Pain Points & User Segments */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="grid gap-2 rounded-xl border border-[#efedf6] p-4">
-              <h4 className="text-sm font-bold text-[#22213a]">반복된 고객 페인포인트</h4>
-              <ul className="grid gap-2 text-[13px] leading-relaxed text-[#22213a]">
+            <div className="grid gap-3 rounded-xl border border-[#e4e1ef] p-5">
+              <h4 className="text-[16px] font-bold text-[#17162b]">반복된 고객 페인포인트</h4>
+              <ul className="grid gap-2.5 text-[15px] leading-relaxed text-[#17162b]">
                 {report.painPoints.map((pain, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="tnum font-mono text-xs font-bold text-[#9f233f]">0{idx + 1}</span>
+                  <li key={idx} className="flex items-start gap-2.5">
+                    <span className="tnum font-mono text-[14px] font-extrabold text-[#9f1d45]">0{idx + 1}</span>
                     <span>{pain}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="grid gap-2 rounded-xl border border-[#efedf6] p-4">
-              <h4 className="text-sm font-bold text-[#22213a]">발견된 사용자 세그먼트</h4>
-              <ul className="divide-y divide-[#efedf6]">
+            <div className="grid gap-3 rounded-xl border border-[#e4e1ef] p-5">
+              <h4 className="text-[16px] font-bold text-[#17162b]">발견된 사용자 세그먼트</h4>
+              <ul className="divide-y divide-[#e6e3f0]">
                 {report.userSegments.map((seg, idx) => (
-                  <li key={idx} className="grid gap-1 py-2 first:pt-0 last:pb-0">
-                    <b className="text-[13px] font-bold text-[#4d30cf]">{seg.segment}</b>
-                    <p className="text-xs leading-relaxed text-[#54546d]">{seg.characteristics}</p>
-                    <p className="text-xs leading-relaxed text-[#22213a]">
-                      <b className="font-semibold">기회 포인트:</b> {seg.opportunity}
+                  <li key={idx} className="grid gap-1.5 py-3 first:pt-0 last:pb-0">
+                    <b className="text-[15px] font-bold text-[#4125cc]">{seg.segment}</b>
+                    <p className="text-[14px] leading-relaxed text-[#565570]">{seg.characteristics}</p>
+                    <p className="text-[14px] leading-relaxed text-[#17162b]">
+                      <b className="font-bold">기회 포인트:</b> {seg.opportunity}
                     </p>
                   </li>
                 ))}
@@ -471,35 +472,35 @@ export function AiInsightReportPanel({
 
           {/* Recommended Actions & Open Questions */}
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-            <div className="grid gap-2">
-              <h4 className="text-sm font-bold text-[#22213a]">다음 실행 권장 액션</h4>
-              <ul className="divide-y divide-[#efedf6] rounded-xl border border-[#efedf6]">
+            <div className="grid gap-2.5">
+              <h4 className="text-[16px] font-bold text-[#17162b]">다음 실행 권장 액션</h4>
+              <ul className="divide-y divide-[#e6e3f0] rounded-xl border border-[#e4e1ef]">
                 {report.recommendedActions.map((act, idx) => {
                   const priorityColor =
                     act.priority === '즉시 실행'
                       ? 'text-[#14674d]'
                       : act.priority === '단기 검증'
-                      ? 'text-[#4d30cf]'
+                      ? 'text-[#4125cc]'
                       : 'text-[#8b4d17]';
                   return (
-                    <li key={idx} className="grid gap-1 px-4 py-3">
+                    <li key={idx} className="grid gap-1.5 px-5 py-3.5">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <b className="text-[13px] font-bold text-[#22213a]">{act.action}</b>
-                        <span className={`shrink-0 text-xs font-semibold ${priorityColor}`}>{act.priority}</span>
+                        <b className="text-[15px] font-bold text-[#17162b]">{act.action}</b>
+                        <span className={`shrink-0 text-[14px] font-bold ${priorityColor}`}>{act.priority}</span>
                       </div>
-                      <p className="text-xs leading-relaxed text-[#62627a]">{act.rationale}</p>
+                      <p className="text-[14px] leading-relaxed text-[#565570]">{act.rationale}</p>
                     </li>
                   );
                 })}
               </ul>
             </div>
 
-            <div className="grid gap-2 rounded-xl border border-[#efedf6] bg-[#faf9fd] p-4">
-              <h4 className="text-sm font-bold text-[#22213a]">추가 확인이 필요한 질문</h4>
-              <ul className="grid gap-2 text-xs leading-relaxed text-[#54546d]">
+            <div className={`grid gap-3 ${saasUi.inset} p-5`}>
+              <h4 className="text-[16px] font-bold text-[#17162b]">추가 확인이 필요한 질문</h4>
+              <ul className="grid gap-2.5 text-[14px] leading-relaxed text-[#44435c]">
                 {report.openQuestions.map((q, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="font-mono font-bold text-[#4d30cf]">Q{idx + 1}.</span>
+                    <span className="font-mono font-bold text-[#4125cc]">Q{idx + 1}.</span>
                     <span>{q}</span>
                   </li>
                 ))}

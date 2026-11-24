@@ -26,7 +26,7 @@ import {
 import { webtoonSurvey, webtoonTopic } from '../lib/webtoonValidation';
 import { getResearchTemplateById, readCustomTemplates, researchTemplates } from '../lib/researchTemplates';
 import { questionGuideKey, type QuestionGuide } from '../lib/questionGuide';
-import { Modal, saveBlob } from './ResearchUI';
+import { Modal, saasUi, saveBlob } from './ResearchUI';
 
 const surveyStore = 'research.survey-keys.v1';
 const surveyPingKey = 'research.survey-last-submit.v1';
@@ -292,39 +292,36 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
   const activeSummary = viewing ? state.summaries[viewing.id] : undefined;
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-[#22213a]">설문조사 · 배포 및 수집</h1>
-          <p className="mt-1 text-[13px] text-[#62627a]">
+          <h1 className={saasUi.pageTitle}>설문조사 · 배포 및 수집</h1>
+          <p className={saasUi.pageSubtitle}>
             아이템만 넣으면 설문 문항 생성부터 배포·응답 링크 발급까지 한 번에 자동화돼요.
           </p>
         </div>
-        <Link
-          to="/?view=surveys&new=1"
-          className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
-        >
-          <Plus size={16} aria-hidden="true" /> 설문 만들기
+        <Link to="/?view=surveys&new=1" className={saasUi.btnPrimary}>
+          <Plus size={18} aria-hidden="true" /> 설문 만들기
         </Link>
       </div>
 
       {justPublished && (
         <section
-          className="grid gap-3 rounded-2xl border border-[#b7e2d1] bg-[#edf9f4] p-4"
+          className="grid gap-3.5 rounded-2xl border border-[#b7e2d1] bg-[#edf9f4] p-5"
           role="status"
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <p className="flex items-center gap-1.5 text-xs font-bold text-[#14674d]">
-                <CircleCheck size={15} aria-hidden="true" /> 설문 배포 및 응답 받기 시작됨
+              <p className="flex items-center gap-1.5 text-[14px] font-bold text-[#14674d]">
+                <CircleCheck size={17} aria-hidden="true" /> 설문 배포 및 응답 받기 시작됨
               </p>
-              <h2 className="mt-1 text-base font-bold text-[#22213a]">{justPublished.title}</h2>
-              <p className="mt-0.5 break-all font-mono text-xs text-[#3b5249]">{link(justPublished)}</p>
+              <h2 className="mt-1 text-[18px] font-bold text-[#17162b]">{justPublished.title}</h2>
+              <p className="mt-1 break-all font-mono text-[14px] text-[#3b5249]">{link(justPublished)}</p>
             </div>
             <button
               type="button"
               onClick={() => setJustPublished(null)}
-              className="text-xs font-semibold text-[#14674d] hover:underline"
+              className="text-[14px] font-semibold text-[#14674d] hover:underline"
             >
               닫기
             </button>
@@ -333,45 +330,45 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
             <button
               type="button"
               onClick={() => void copy(justPublished)}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#14674d] px-3.5 text-xs font-semibold text-white hover:bg-[#0f523d]"
+              className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-[#14674d] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#0f523d]"
             >
-              <Link2 size={14} aria-hidden="true" /> 응답 링크 복사
+              <Link2 size={15} aria-hidden="true" /> 응답 링크 복사
             </button>
             <a
               href={`/survey/${justPublished.id}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[#b7e2d1] bg-white px-3 text-xs font-semibold text-[#14674d] hover:bg-[#f6fcf9]"
+              className="inline-flex min-h-10 shrink-0 items-center gap-1 whitespace-nowrap rounded-xl border border-[#b7e2d1] bg-white px-3.5 text-[14px] font-semibold text-[#14674d] transition-colors hover:bg-[#f6fcf9]"
             >
-              응답 화면 바로 열기 <ArrowUpRight size={14} aria-hidden="true" />
+              응답 화면 바로 열기 <ArrowUpRight size={15} aria-hidden="true" />
             </a>
             <Link
               to={`/?view=analytics&surveyId=${justPublished.id}`}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#b7e2d1] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f6fcf9]"
+              className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#b7e2d1] bg-white px-3.5 text-[14px] font-semibold text-[#17162b] transition-colors hover:bg-[#f6fcf9]"
             >
-              <BarChart3 size={14} aria-hidden="true" /> D3 분석 대시보드
+              <BarChart3 size={15} aria-hidden="true" /> D3 분석 대시보드
             </Link>
           </div>
         </section>
       )}
 
       {notice && !justPublished && (
-        <p className="rounded-lg bg-[#eee9ff] px-3 py-2 text-[13px] font-medium text-[#4d30cf]" role="status">
+        <p className="rounded-xl border border-[#dfd7fb] bg-[#efeaff] px-4 py-2.5 text-[15px] font-medium text-[#4125cc]" role="status">
           {notice}
         </p>
       )}
       {error && !closing && !exporting && (
-        <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+        <p className="rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]" role="alert">
           {error}
         </p>
       )}
       {state.error && (
-        <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+        <p className="rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]" role="alert">
           일부 설문 상태를 읽을 수 없어요. 응답 새로고침을 눌러 주세요.
         </p>
       )}
       {state.missingIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#f2d6de] bg-[#fff7f9] px-3 py-2 text-[13px] text-[#9a2148]">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]">
           <span>이전에 기록된 설문 {state.missingIds.length}건을 서버에서 찾을 수 없어요.</span>
           <button
             type="button"
@@ -383,65 +380,62 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
         </div>
       )}
 
-      <p className="rounded-xl border border-[#e5dcfc] bg-[#f4f0ff] px-4 py-3 text-[13px] text-[#4d30cf]">
+      <p className="rounded-2xl border border-[#dfd7fb] bg-[#f8f6ff] px-4.5 py-3.5 text-[15px] text-[#4125cc]">
         설문을 배포하면 고유 응답 링크가 즉시 발급되며, 수집된 응답은 실시간 요약과 D3 차트, CSV 다운로드로 확인할 수 있어요.
       </p>
 
-      <section className="overflow-hidden rounded-2xl border border-[#e9e7f1] bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+      <section className={`overflow-hidden ${saasUi.card}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
           <div>
-            <h2 className="text-base font-bold text-[#22213a]">내 설문 {state.keys.length}개</h2>
-            <p className="text-[13px] text-[#62627a]">배포된 설문의 문항은 응답 데이터 일관성을 위해 수정되지 않아요.</p>
+            <h2 className={saasUi.sectionTitle}>내 설문 {state.keys.length}개</h2>
+            <p className="mt-0.5 text-[14px] text-[#565570]">배포된 설문의 문항은 응답 데이터 일관성을 위해 수정되지 않아요.</p>
           </div>
           {state.keys.length > 0 && (
             <button
               type="button"
               disabled={state.loading}
               onClick={() => state.reload()}
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
+              className={saasUi.btnCompactSecondary}
             >
-              <RefreshCw size={14} aria-hidden="true" /> 응답 새로고침
+              <RefreshCw size={15} aria-hidden="true" /> 응답 새로고침
             </button>
           )}
         </div>
 
         {!state.keys.length && (
-          <div className="grid justify-items-center gap-2 border-t border-[#e9e7f1] px-5 py-10 text-center">
-            <span className="grid size-11 place-items-center rounded-xl bg-[#f1edff] text-[#5b3df5]">
-              <ClipboardList size={22} aria-hidden="true" />
+          <div className="grid justify-items-center gap-2.5 border-t border-[#e6e3f0] px-5 py-12 text-center">
+            <span className="grid size-12 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+              <ClipboardList size={24} aria-hidden="true" />
             </span>
-            <h3 className="mt-1 text-base font-bold text-[#22213a]">아직 배포한 설문이 없어요</h3>
-            <p className="max-w-md text-[13px] text-[#62627a]">
+            <h3 className="mt-1 text-[18px] font-bold text-[#17162b]">아직 배포한 설문이 없어요</h3>
+            <p className="max-w-md text-[15px] text-[#565570]">
               검증할 아이템을 입력해 맞춤형 설문 문항을 생성하고, 타겟 유저에게 링크를 배포해 보세요.
             </p>
-            <Link
-              to="/?view=surveys&new=1"
-              className="mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
-            >
-              <Sparkles size={15} aria-hidden="true" /> 아이템으로 첫 설문 만들기
+            <Link to="/?view=surveys&new=1" className={`mt-2 ${saasUi.btnPrimary}`}>
+              <Sparkles size={16} aria-hidden="true" /> 아이템으로 첫 설문 만들기
             </Link>
           </div>
         )}
 
-        <div className="divide-y divide-[#e9e7f1] border-t border-[#e9e7f1]">
+        <div className="divide-y divide-[#e6e3f0] border-t border-[#e6e3f0]">
           {state.keys.map((k) => {
             const s = state.summaries[k.id];
             return (
-              <article key={k.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <article key={k.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4.5 sm:px-6">
                 <div className="min-w-0">
-                  <h3 className="truncate text-base font-bold text-[#22213a]">{k.title}</h3>
+                  <h3 className="truncate text-[18px] font-bold text-[#17162b]">{k.title}</h3>
                   {s ? (
-                    <p className="tnum mt-1 flex flex-wrap items-center gap-2 text-[13px] text-[#62627a]">
-                      <span className={`font-semibold ${s.active ? 'text-[#14674d]' : 'text-[#62627a]'}`}>
+                    <p className="tnum mt-1 flex flex-wrap items-center gap-2 text-[14px] text-[#565570]">
+                      <span className={`font-semibold ${s.active ? 'text-[#14674d]' : 'text-[#565570]'}`}>
                         {s.active ? '응답 접수 중' : '접수 종료'}
                       </span>
                       <span aria-hidden="true">·</span>
                       <span>{s.questions.length}문항</span>
                       <span aria-hidden="true">·</span>
-                      <span className="font-semibold text-[#22213a]">응답 {s.count}건</span>
+                      <span className="font-semibold text-[#17162b]">응답 {s.count}건</span>
                     </p>
                   ) : (
-                    <p className="mt-1 text-[13px] text-[#62627a]">
+                    <p className="mt-1 text-[14px] text-[#565570]">
                       {state.loading ? '불러오는 중…' : '설문 상태를 불러올 수 없어요.'}
                     </p>
                   )}
@@ -450,15 +444,15 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     to={`/?view=analytics&surveyId=${k.id}`}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-[#faf7ff] px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#eee8ff]"
+                    className={saasUi.btnCompactSoft}
                   >
-                    <BarChart3 size={14} aria-hidden="true" /> D3 분석 대시보드 ({s?.count ?? 0})
+                    <BarChart3 size={15} aria-hidden="true" /> D3 분석 대시보드 ({s?.count ?? 0})
                   </Link>
                   <button
                     type="button"
                     disabled={!s}
                     onClick={() => setViewing(k)}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
+                    className={saasUi.btnCompactSecondary}
                   >
                     요약 보기
                   </button>
@@ -466,31 +460,31 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
                     href={`/survey/${k.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                    className={saasUi.btnCompactSecondary}
                   >
-                    응답 화면 <ArrowUpRight size={14} aria-hidden="true" />
+                    응답 화면 <ArrowUpRight size={15} aria-hidden="true" />
                   </a>
                   <button
                     type="button"
                     onClick={() => void copy(k)}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#f1edff]"
+                    className={saasUi.btnCompactSoft}
                   >
-                    <Link2 size={14} aria-hidden="true" /> 링크 복사
+                    <Link2 size={15} aria-hidden="true" /> 링크 복사
                   </button>
                   <button
                     type="button"
                     disabled={!s || s.count === 0 || busy === k.id}
                     onClick={() => void exportCsv(k)}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
+                    className={saasUi.btnCompactSecondary}
                   >
-                    <Download size={14} aria-hidden="true" /> 응답 원문 CSV
+                    <Download size={15} aria-hidden="true" /> 응답 원문 CSV
                   </button>
                   {s && (
                     <button
                       type="button"
                       disabled={busy === k.id}
                       onClick={() => (s.active ? setClosing(k) : void toggle(k, true))}
-                      className="inline-flex min-h-9 shrink-0 items-center whitespace-nowrap rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
+                      className={saasUi.btnCompactSecondary}
                     >
                       {s.active ? '접수 종료' : '접수 재개'}
                     </button>
@@ -505,57 +499,57 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
       {viewing && activeSummary && (
         <Modal title={`설문 결과 · ${activeSummary.title}`} close={() => setViewing(null)} wide>
           <div className="grid gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#e9e7f1] bg-[#faf8ff] px-4 py-3">
-              <div className="tnum text-sm text-[#22213a]">
-                총 수집 응답 <b className="font-bold text-[#5b3df5]">{activeSummary.count}건</b> ·{' '}
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] px-4 py-3.5">
+              <div className="tnum text-[15px] text-[#17162b]">
+                총 수집 응답 <b className="font-bold text-[#4c2ee6]">{activeSummary.count}건</b> ·{' '}
                 {activeSummary.active ? '현재 접수 중' : '접수 종료됨'}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Link
                   to={`/?view=analytics&surveyId=${viewing.id}`}
                   onClick={() => setViewing(null)}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#d8cef7] bg-white px-3 text-xs font-semibold text-[#4d30cf] hover:bg-[#f5f1ff]"
+                  className={saasUi.btnCompactSoft}
                 >
-                  <BarChart3 size={14} aria-hidden="true" /> D3 시각화 대시보드
+                  <BarChart3 size={15} aria-hidden="true" /> D3 시각화 대시보드
                 </Link>
                 <button
                   type="button"
                   disabled={activeSummary.count === 0 || analyzingId === viewing.id}
                   onClick={() => void analyzeResults(viewing)}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-3 text-xs font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-45"
+                  className={saasUi.btnCompactPrimary}
                 >
-                  <Sparkles size={14} aria-hidden="true" />
+                  <Sparkles size={15} aria-hidden="true" />
                   {analyzingId === viewing.id ? '응답 데이터 분석 중…' : 'AI 응답 분석 요약'}
                 </button>
                 <button
                   type="button"
                   disabled={activeSummary.count === 0 || busy === viewing.id}
                   onClick={() => void exportCsv(viewing)}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a] disabled:opacity-45"
+                  className={saasUi.btnCompactSecondary}
                 >
-                  <Download size={14} aria-hidden="true" /> 응답 원문 CSV
+                  <Download size={15} aria-hidden="true" /> 응답 원문 CSV
                 </button>
               </div>
             </div>
 
             {analysis[viewing.id] && (
-              <section className="grid gap-3 rounded-xl border border-[#e2d5fd] bg-[#faf7ff] p-4 text-[13px]">
-                <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#4d30cf]">
-                  <Sparkles size={15} aria-hidden="true" /> AI 수집 데이터 요약 리포트
+              <section className="grid gap-3.5 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] p-4.5 text-[15px]">
+                <h3 className="flex items-center gap-1.5 text-[16px] font-bold text-[#4125cc]">
+                  <Sparkles size={16} aria-hidden="true" /> AI 수집 데이터 요약 리포트
                 </h3>
-                <p className="text-[#22213a]">{analysis[viewing.id].overview}</p>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <p className="leading-relaxed text-[#17162b]">{analysis[viewing.id].overview}</p>
+                <div className="grid gap-3.5 sm:grid-cols-2">
                   <div>
-                    <b className="text-xs text-[#4d30cf]">핵심 발견 사항</b>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-[#22213a]">
+                    <b className="text-[14px] text-[#4125cc]">핵심 발견 사항</b>
+                    <ul className="mt-1.5 list-disc space-y-1.5 pl-4 text-[#17162b]">
                       {analysis[viewing.id].keyFindings.map((f, idx) => (
                         <li key={idx}>{f}</li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <b className="text-xs text-[#4d30cf]">타겟 유저 신호</b>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-[#22213a]">
+                    <b className="text-[14px] text-[#4125cc]">타겟 유저 신호</b>
+                    <ul className="mt-1.5 list-disc space-y-1.5 pl-4 text-[#17162b]">
                       {analysis[viewing.id].segmentSignals.map((f, idx) => (
                         <li key={idx}>{f}</li>
                       ))}
@@ -563,8 +557,8 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
                   </div>
                 </div>
                 <div>
-                  <b className="text-xs text-[#4d30cf]">다음 실행 제안</b>
-                  <ul className="mt-1 list-disc space-y-1 pl-4 text-[#22213a]">
+                  <b className="text-[14px] text-[#4125cc]">다음 실행 제안</b>
+                  <ul className="mt-1.5 list-disc space-y-1.5 pl-4 text-[#17162b]">
                     {analysis[viewing.id].recommendations.map((f, idx) => (
                       <li key={idx}>{f}</li>
                     ))}
@@ -574,24 +568,24 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
             )}
 
             {activeSummary.count === 0 ? (
-              <div className="grid justify-items-center gap-2 rounded-xl border border-dashed border-[#d8d3ea] py-8 text-center">
-                <p className="text-sm font-semibold text-[#22213a]">아직 수집된 응답이 없어요</p>
-                <p className="text-xs text-[#62627a]">응답 링크를 복사해 타겟 유저에게 전달하거나, 응답 화면에서 직접 테스트해 보세요.</p>
+              <div className="grid justify-items-center gap-2 rounded-xl border border-dashed border-[#dcd8e8] py-8 text-center">
+                <p className="text-[16px] font-semibold text-[#17162b]">아직 수집된 응답이 없어요</p>
+                <p className="text-[14px] text-[#565570]">응답 링크를 복사해 타겟 유저에게 전달하거나, 응답 화면에서 직접 테스트해 보세요.</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => void copy(viewing)}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-3 text-xs font-semibold text-white"
+                    className={saasUi.btnCompactPrimary}
                   >
-                    <Link2 size={14} aria-hidden="true" /> 응답 링크 복사
+                    <Link2 size={15} aria-hidden="true" /> 응답 링크 복사
                   </button>
                   <a
                     href={`/survey/${viewing.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-[#e2deee] bg-white px-3 text-xs font-semibold text-[#22213a]"
+                    className={saasUi.btnCompactSecondary}
                   >
-                    응답 화면 열기 <ArrowUpRight size={14} aria-hidden="true" />
+                    응답 화면 열기 <ArrowUpRight size={15} aria-hidden="true" />
                   </a>
                 </div>
               </div>
@@ -603,24 +597,24 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
                     const nums = vals.map(Number).filter((n) => n >= 1 && n <= 5);
                     const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2) : '0.00';
                     return (
-                      <div key={qIdx} className="grid gap-2 rounded-xl border border-[#e9e7f1] p-3.5">
+                      <div key={qIdx} className="grid gap-2.5 rounded-xl border border-[#e6e3f0] p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <b className="text-sm text-[#22213a]">
+                          <b className="text-[16px] text-[#17162b]">
                             {qIdx + 1}. {q.label}
                           </b>
-                          <span className="tnum font-mono text-xs font-semibold text-[#4d30cf]">
+                          <span className="tnum font-mono text-[14px] font-semibold text-[#4125cc]">
                             평균 {avg} / 5.0 ({nums.length}명)
                           </span>
                         </div>
-                        <div className="grid gap-1.5">
+                        <div className="grid gap-2">
                           {[5, 4, 3, 2, 1].map((score) => {
                             const cnt = nums.filter((n) => n === score).length;
                             const pct = nums.length ? Math.round((cnt / nums.length) * 100) : 0;
                             return (
-                              <div key={score} className="grid grid-cols-[2.5rem_1fr_4rem] items-center gap-2 text-xs">
-                                <span className="tnum text-[#62627a]">{score}점</span>
+                              <div key={score} className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-2 text-[14px]">
+                                <span className="tnum text-[#565570]">{score}점</span>
                                 <progress className="meter-progress" value={pct} max={100} />
-                                <span className="tnum text-right text-[#22213a]">
+                                <span className="tnum text-right text-[#17162b]">
                                   {cnt}명 ({pct}%)
                                 </span>
                               </div>
@@ -633,22 +627,22 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
 
                   if (q.type === 'choice') {
                     return (
-                      <div key={qIdx} className="grid gap-2 rounded-xl border border-[#e9e7f1] p-3.5">
+                      <div key={qIdx} className="grid gap-2.5 rounded-xl border border-[#e6e3f0] p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <b className="text-sm text-[#22213a]">
+                          <b className="text-[16px] text-[#17162b]">
                             {qIdx + 1}. {q.label}
                           </b>
-                          <span className="tnum text-xs text-[#62627a]">{vals.length}건 응답</span>
+                          <span className="tnum text-[14px] text-[#565570]">{vals.length}건 응답</span>
                         </div>
-                        <div className="grid gap-1.5">
+                        <div className="grid gap-2">
                           {q.options.map((opt) => {
                             const cnt = vals.filter((v) => v === opt).length;
                             const pct = vals.length ? Math.round((cnt / vals.length) * 100) : 0;
                             return (
-                              <div key={opt} className="grid gap-1 text-xs">
+                              <div key={opt} className="grid gap-1 text-[14px]">
                                 <div className="flex justify-between gap-2">
-                                  <span className="font-medium text-[#22213a]">{opt}</span>
-                                  <span className="tnum text-[#62627a]">
+                                  <span className="font-medium text-[#17162b]">{opt}</span>
+                                  <span className="tnum text-[#565570]">
                                     {cnt}명 ({pct}%)
                                   </span>
                                 </div>
@@ -662,23 +656,23 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
                   }
 
                   return (
-                    <div key={qIdx} className="grid gap-2 rounded-xl border border-[#e9e7f1] p-3.5">
+                    <div key={qIdx} className="grid gap-2.5 rounded-xl border border-[#e6e3f0] p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <b className="text-sm text-[#22213a]">
+                        <b className="text-[16px] text-[#17162b]">
                           {qIdx + 1}. {q.label}
                         </b>
-                        <span className="tnum text-xs text-[#62627a]">{vals.length}건 응답</span>
+                        <span className="tnum text-[14px] text-[#565570]">{vals.length}건 응답</span>
                       </div>
                       {vals.length ? (
                         <ul className="grid max-h-48 gap-1.5 overflow-y-auto">
                           {vals.map((ans, aIdx) => (
-                            <li key={aIdx} className="rounded-lg bg-[#f8f8fc] px-3 py-2 text-[13px] text-[#22213a]">
+                            <li key={aIdx} className="rounded-lg bg-[#f8f7fc] px-3.5 py-2.5 text-[15px] text-[#17162b]">
                               {ans}
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-xs text-[#62627a]">작성된 응답이 없어요.</p>
+                        <p className="text-[14px] text-[#565570]">작성된 응답이 없어요.</p>
                       )}
                     </div>
                   );
@@ -696,18 +690,18 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
             if (!busy) setClosing(null);
           }}
         >
-          <p className="text-sm text-[#62627a]">이 링크로 새 응답을 받지 않아요. 기존 응답은 CSV로 내려받을 수 있어요.</p>
+          <p className="text-[15px] text-[#565570]">이 링크로 새 응답을 받지 않아요. 기존 응답은 CSV로 내려받을 수 있어요.</p>
           {error && (
-            <p className="mt-2 rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+            <p className="mt-2 rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-3.5 py-2.5 text-[15px] text-[#9f1d45]" role="alert">
               {error}
             </p>
           )}
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="mt-5 flex justify-end gap-2">
             <button
               type="button"
               disabled={!!busy}
               onClick={() => setClosing(null)}
-              className="min-h-10 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a]"
+              className={saasUi.btnSecondary}
             >
               취소
             </button>
@@ -715,7 +709,7 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
               type="button"
               disabled={!!busy}
               onClick={() => void toggle(closing, false)}
-              className="min-h-10 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white"
+              className={saasUi.btnPrimary}
             >
               {busy ? '저장 중…' : '접수 종료'}
             </button>
@@ -725,14 +719,14 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
 
       {copying && (
         <Modal title="응답 링크 복사" close={() => setCopying('')}>
-          <label className="grid gap-2 text-sm font-semibold text-[#22213a]">
+          <label className={saasUi.labelText}>
             이 주소를 복사해 타겟 유저에게 전달해 주세요.
             <input
               name="survey-link"
               readOnly
               value={copying}
               onFocus={(e) => e.currentTarget.select()}
-              className="min-h-10 w-full rounded-lg border border-[#dfdce9] px-3 font-mono text-xs"
+              className={`${saasUi.input} font-mono text-[14px]`}
             />
           </label>
         </Modal>
@@ -746,13 +740,13 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
           }}
         >
           <form
-            className="grid gap-3"
+            className="grid gap-3.5"
             onSubmit={(e) => {
               e.preventDefault();
               void exportCsv(exporting, Number(new FormData(e.currentTarget).get('page')));
             }}
           >
-            <label className="grid gap-1.5 text-sm font-semibold text-[#22213a]">
+            <label className={saasUi.labelText}>
               500건 단위 파일 번호
               <input
                 name="page"
@@ -761,18 +755,18 @@ export function Surveys({ state }: { state: ReturnType<typeof useSurveys> }) {
                 max={Math.ceil(state.summaries[exporting.id].count / 500)}
                 required
                 defaultValue="1"
-                className="min-h-10 rounded-lg border border-[#dfdce9] px-3 text-sm"
+                className={saasUi.input}
               />
             </label>
             {error && (
-              <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+              <p className="rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-3.5 py-2.5 text-[15px] text-[#9f1d45]" role="alert">
                 {error}
               </p>
             )}
             <button
               type="submit"
               disabled={!!busy}
-              className="min-h-10 w-fit rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white"
+              className={`${saasUi.btnPrimary} w-fit`}
             >
               파일 내려받기
             </button>
@@ -1061,34 +1055,33 @@ function SurveyBuilder({
     }
   }
 
-  const inputClass =
-    'w-full min-h-10 rounded-lg border border-[#dfdce9] bg-white px-3 py-2 text-sm font-normal text-[#22213a] hover:border-[#b9b0da] focus:border-[#5b3df5]';
+  const inputClass = saasUi.input;
   const hasBlankPlaceholderOnly = questions.length === 1 && !questions[0].label.trim();
 
   return (
-    <div className="grid max-w-4xl gap-4">
+    <div className="grid max-w-4xl gap-5">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-[#22213a]">설문 만들기 및 자동 배포</h1>
-        <p className="mt-1 text-[13px] text-[#62627a]">
+        <h1 className={saasUi.pageTitle}>설문 만들기 및 자동 배포</h1>
+        <p className={saasUi.pageSubtitle}>
           아이템만 입력하면 설문 문항 생성부터 배포 링크 발급까지 한 번에 자동화돼요. 템플릿으로 바로 시작할 수도 있어요.
         </p>
       </div>
 
       {/* AI Item-to-Survey Generator Card */}
-      <section className="grid gap-3 rounded-2xl border border-[#e2d5fd] bg-[#faf7ff] p-5">
-        <div className="flex items-start gap-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eee8ff] text-[#5b3df5]">
-            <Sparkles size={18} aria-hidden="true" />
+      <section className={`grid gap-4 ${saasUi.cardSoft} p-5 sm:p-6`}>
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#efeaff] text-[#4c2ee6]">
+            <Sparkles size={20} aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-base font-bold text-[#22213a]">원클릭 AI 설문 생성 · 자동 배포</h2>
-            <p className="text-[13px] text-[#62627a]">
+            <h2 className={saasUi.sectionTitle}>원클릭 AI 설문 생성 · 자동 배포</h2>
+            <p className="mt-0.5 text-[15px] text-[#565570]">
               검증할 아이템을 넣고 &quot;자동 생성 후 즉시 배포&quot;를 누르면 문항 생성과 응답 링크 발급이 한 번에 완료돼요.
             </p>
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-1 text-[13px] font-semibold text-[#22213a] sm:col-span-2">
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <label className={`${saasUi.labelText} sm:col-span-2`}>
             검증할 아이템
             <input
               value={aiItem}
@@ -1098,7 +1091,7 @@ function SurveyBuilder({
               className={inputClass}
             />
           </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#22213a]">
+          <label className={saasUi.labelText}>
             타겟 유저 (선택)
             <input
               value={aiAudience}
@@ -1108,7 +1101,7 @@ function SurveyBuilder({
               className={inputClass}
             />
           </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#22213a]">
+          <label className={saasUi.labelText}>
             설문 목적 (선택)
             <select
               value={aiGoal}
@@ -1123,21 +1116,21 @@ function SurveyBuilder({
             </select>
           </label>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             disabled={aiBusy || busy}
             onClick={() => void generateAndDeploySurvey()}
-            className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+            className={saasUi.btnPrimary}
           >
-            <Sparkles size={15} aria-hidden="true" />
+            <Sparkles size={16} aria-hidden="true" />
             {aiBusy ? aiStatusText || '자동 생성 및 배포 중…' : '아이템으로 자동 생성 후 즉시 배포'}
           </button>
           <button
             type="button"
             disabled={aiBusy || busy}
             onClick={() => void generateSurveyQuestions()}
-            className="inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d8cef7] bg-white px-4 text-sm font-semibold text-[#4d30cf] hover:bg-[#f4f0ff] disabled:opacity-50"
+            className={saasUi.btnSoft}
           >
             문항만 먼저 생성
           </button>
@@ -1145,21 +1138,21 @@ function SurveyBuilder({
             type="button"
             disabled={aiBusy || busy}
             onClick={() => setAiItem('일상 사진과 짧은 글을 4컷 웹툰으로 바꿔 주는 웹·앱')}
-            className="text-xs font-bold text-[#5b3df5] hover:underline"
+            className="text-[14px] font-bold text-[#4c2ee6] hover:underline"
           >
             예시 아이템 넣기
           </button>
         </div>
         {aiNotice && (
-          <p className="rounded-lg bg-[#eee9ff] px-3 py-2 text-[13px] font-medium text-[#4d30cf]" role="status">
+          <p className="rounded-xl border border-[#dfd7fb] bg-[#efeaff] px-4 py-2.5 text-[15px] font-medium text-[#4125cc]" role="status">
             {aiNotice}
           </p>
         )}
       </section>
 
       {/* Quick 1-click template bar */}
-      <section className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e9e7f1] bg-white px-4 py-3">
-        <span className="text-xs font-bold text-[#62627a]">상황별 원클릭 불러오기</span>
+      <section className={`flex flex-wrap items-center gap-2 ${saasUi.card} px-5 py-3.5`}>
+        <span className="text-[14px] font-bold text-[#565570]">상황별 원클릭 불러오기</span>
         {[
           ['problem-discovery', '고객 문제 검증'],
           ['value-proposition', '가치 제안 테스트'],
@@ -1171,7 +1164,7 @@ function SurveyBuilder({
             type="button"
             disabled={aiBusy || busy}
             onClick={() => applyPresetTemplate(id)}
-            className="inline-flex min-h-8 shrink-0 items-center whitespace-nowrap rounded-lg border border-[#e2deee] bg-[#faf9fd] px-3 text-xs font-semibold text-[#22213a] hover:border-[#cfc1f3] hover:bg-[#f3efff] hover:text-[#4d30cf]"
+            className="inline-flex min-h-9 shrink-0 items-center whitespace-nowrap rounded-xl border border-[#dcd8e8] bg-[#f8f7fc] px-3.5 text-[14px] font-semibold text-[#17162b] transition-colors hover:border-[#cfc1f3] hover:bg-[#efeaff] hover:text-[#4125cc]"
           >
             {label}
           </button>
@@ -1179,14 +1172,16 @@ function SurveyBuilder({
       </section>
 
       <form
-        className="grid gap-4 rounded-2xl border border-[#e9e7f1] bg-white p-5"
+        className={`grid gap-4 ${saasUi.card} p-5 sm:p-6`}
         autoComplete="off"
         noValidate
         onSubmit={submit}
       >
         <fieldset disabled={busy || aiBusy} className="grid gap-4">
-          <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
-            설문 제목 <span className="font-normal text-[#62627a]">(비워 두면 자동 생성돼요)</span>
+          <label className={saasUi.labelText}>
+            <span>
+              설문 제목 <span className="font-normal text-[#565570]">(비워 두면 자동 생성돼요)</span>
+            </span>
             <input
               name="title"
               maxLength={100}
@@ -1196,8 +1191,10 @@ function SurveyBuilder({
               className={inputClass}
             />
           </label>
-          <label className="grid gap-1.5 text-[13px] font-semibold text-[#22213a]">
-            연구 안내 / 참여 동의 내용 <span className="font-normal text-[#62627a]">(기본 동의 문구가 자동 입력돼요)</span>
+          <label className={saasUi.labelText}>
+            <span>
+              연구 안내 / 참여 동의 내용 <span className="font-normal text-[#565570]">(기본 동의 문구가 자동 입력돼요)</span>
+            </span>
             <textarea
               name="intro"
               maxLength={3000}
@@ -1209,9 +1206,9 @@ function SurveyBuilder({
             />
           </label>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#efedf6] pt-3">
-            <h2 className="text-base font-bold text-[#22213a]">문항 {questions.length}개</h2>
-            <label className="flex items-center gap-2 text-xs font-semibold text-[#62627a]">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e6e3f0] pt-4">
+            <h2 className={saasUi.sectionTitle}>문항 {questions.length}개</h2>
+            <label className="flex items-center gap-2 text-[14px] font-semibold text-[#565570]">
               템플릿 추가
               <select
                 aria-label="질문 예시"
@@ -1225,7 +1222,7 @@ function SurveyBuilder({
                     );
                   }
                 }}
-                className="min-h-9 rounded-lg border border-[#dfdce9] bg-white px-2.5 text-xs font-normal text-[#22213a]"
+                className={saasUi.select}
               >
                 <option value="">예시 선택</option>
                 {available.map((t) => (
@@ -1242,21 +1239,21 @@ function SurveyBuilder({
           </div>
 
           {questions.map((q, i) => (
-            <fieldset key={i} className="grid gap-2.5 rounded-xl border border-[#e9e7f1] p-4">
+            <fieldset key={i} className="grid gap-3 rounded-xl border border-[#e6e3f0] p-4 sm:p-4.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-[#4d30cf]">문항 {i + 1}</span>
+                <span className="text-[14px] font-bold text-[#4125cc]">문항 {i + 1}</span>
                 <button
                   type="button"
                   aria-label={`문항 ${i + 1} 삭제`}
                   disabled={questions.length === 1}
                   onClick={() => setQuestions((old) => old.filter((_, n) => n !== i))}
-                  className="grid size-8 place-items-center rounded-lg text-[#62627a] hover:bg-[#fff0f3] hover:text-[#a6214e] disabled:opacity-40"
+                  className="grid size-9 place-items-center rounded-xl text-[#565570] transition-colors hover:bg-[#fff5f7] hover:text-[#b01e4a] disabled:opacity-40"
                 >
-                  <Trash2 size={16} aria-hidden="true" />
+                  <Trash2 size={17} aria-hidden="true" />
                 </button>
               </div>
-              <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_140px]">
-                <label className="grid gap-1 text-xs font-semibold text-[#22213a]">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px]">
+                <label className={saasUi.labelText}>
                   질문 *
                   <input
                     name={`label-${i}`}
@@ -1267,7 +1264,7 @@ function SurveyBuilder({
                     className={inputClass}
                   />
                 </label>
-                <label className="grid gap-1 text-xs font-semibold text-[#22213a]">
+                <label className={saasUi.labelText}>
                   응답 유형
                   <select
                     name={`type-${i}`}
@@ -1284,7 +1281,7 @@ function SurveyBuilder({
                 </label>
               </div>
               {q.type === 'choice' && (
-                <label className="grid gap-1 text-xs font-semibold text-[#22213a]">
+                <label className={saasUi.labelText}>
                   선택지 * (한 줄에 하나씩, 2~10개)
                   <textarea
                     rows={3}
@@ -1295,14 +1292,14 @@ function SurveyBuilder({
                   />
                 </label>
               )}
-              {q.type === 'scale' && <p className="text-xs text-[#62627a]">1 전혀 그렇지 않다 / 5 매우 그렇다</p>}
-              <label className="flex w-fit items-center gap-2 text-xs font-medium text-[#22213a]">
+              {q.type === 'scale' && <p className="text-[14px] text-[#565570]">1 전혀 그렇지 않다 / 5 매우 그렇다</p>}
+              <label className="flex w-fit items-center gap-2 text-[14px] font-medium text-[#17162b]">
                 <input
                   type="checkbox"
                   name={`required-${i}`}
                   checked={q.required}
                   onChange={(e) => edit(i, { required: e.target.checked })}
-                  className="size-4 accent-[#5b3df5]"
+                  className="size-4 accent-[#4c2ee6]"
                 />
                 필수 응답
               </label>
@@ -1313,33 +1310,33 @@ function SurveyBuilder({
             type="button"
             disabled={questions.length >= 20}
             onClick={() => setQuestions((old) => [...old, { label: '', type: 'text', required: true, options: [] }])}
-            className="inline-flex min-h-10 w-fit items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb] disabled:opacity-50"
+            className={`${saasUi.btnSecondary} w-fit`}
           >
-            <Plus size={16} aria-hidden="true" /> 문항 추가
+            <Plus size={17} aria-hidden="true" /> 문항 추가
           </button>
         </fieldset>
 
         {error && (
-          <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+          <p className="rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]" role="alert">
             {error}
           </p>
         )}
-        <p className="text-xs text-[#62627a]">
+        <p className="text-[14px] text-[#565570]">
           문항이 비어 있어도 상단에 &quot;검증할 아이템&quot;을 적어 두셨다면 아래 버튼을 눌렀을 때 자동으로 문항을 만들어 배포해요.
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             disabled={busy || aiBusy}
             onClick={() => setConfirmCancel(true)}
-            className="min-h-10 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+            className={saasUi.btnSecondary}
           >
             취소
           </button>
           <button
             type="submit"
             disabled={busy || aiBusy}
-            className="min-h-10 rounded-lg bg-[#5b3df5] px-5 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+            className={saasUi.btnPrimary}
           >
             {busy ? (aiStatusText || '설문 배포 중…') : '설문 배포 및 응답 받기 시작'}
           </button>
@@ -1348,19 +1345,19 @@ function SurveyBuilder({
 
       {confirmCancel && (
         <Modal title="설문 작성을 그만둘까요?" close={() => setConfirmCancel(false)}>
-          <p className="text-sm text-[#62627a]">지금까지 입력한 내용은 저장되지 않아요.</p>
-          <div className="mt-4 flex justify-end gap-2">
+          <p className="text-[15px] text-[#565570]">지금까지 입력한 내용은 저장되지 않아요.</p>
+          <div className="mt-5 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setConfirmCancel(false)}
-              className="min-h-10 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a]"
+              className={saasUi.btnSecondary}
             >
               계속 작성
             </button>
             <button
               type="button"
               onClick={cancel}
-              className="min-h-10 rounded-lg bg-[#a6214e] px-4 text-sm font-semibold text-white"
+              className={saasUi.btnDanger}
             >
               작성 취소
             </button>
@@ -1426,85 +1423,81 @@ function ResponseForm({ id }: { id: string }) {
     }
   }
 
-  const inputClass =
-    'w-full min-h-10 rounded-lg border border-[#dfdce9] bg-white px-3 py-2 text-sm text-[#22213a] hover:border-[#b9b0da] focus:border-[#5b3df5]';
+  const inputClass = saasUi.input;
 
   return (
-    <div className="min-h-dvh bg-[#f7f7fb] px-4 py-8 text-[#22213a]">
-      <header className="mx-auto mb-4 flex max-w-2xl items-center gap-2.5">
-        <span className="grid size-9 place-items-center rounded-xl bg-[#5b3df5] text-white">
-          <AudioLines size={18} aria-hidden="true" />
+    <div className="min-h-dvh bg-[#f6f6fb] px-4 py-8 text-[#17162b]">
+      <header className="mx-auto mb-5 flex max-w-2xl items-center gap-3">
+        <span className="grid size-10 place-items-center rounded-xl bg-[#4c2ee6] text-white shadow-[0_1px_2px_rgba(76,46,230,0.2)]">
+          <AudioLines size={20} aria-hidden="true" />
         </span>
-        <b className="font-display text-lg font-extrabold">리서치랩</b>
+        <b className="font-display text-[20px] font-extrabold tracking-tight text-[#17162b]">리서치랩</b>
       </header>
 
-      <main className="mx-auto max-w-2xl rounded-2xl border border-[#e9e7f1] bg-white p-6 sm:p-8">
+      <main className={`mx-auto max-w-2xl ${saasUi.card} p-6 sm:p-8`}>
         {!survey ? (
           <div className="grid gap-2">
-            <h1 className="font-display text-2xl font-bold">연구 설문</h1>
-            <p className="text-sm text-[#62627a]" role={error ? 'alert' : 'status'}>
+            <h1 className={saasUi.pageTitle}>연구 설문</h1>
+            <p className="text-[15px] text-[#565570]" role={error ? 'alert' : 'status'}>
               {error || '설문을 불러오는 중…'}
             </p>
           </div>
         ) : done ? (
           <div className="grid gap-4 py-4">
-            <span className="grid size-11 place-items-center rounded-xl bg-[#e6f7ef] text-[#176b50]">
-              <CircleCheck size={24} aria-hidden="true" />
+            <span className="grid size-12 place-items-center rounded-xl bg-[#e6f7ef] text-[#14674d]">
+              <CircleCheck size={26} aria-hidden="true" />
             </span>
             <div>
-              <h1 className="font-display text-2xl font-bold text-[#22213a]">응답을 제출했어요</h1>
-              <p className="mt-1 text-sm text-[#62627a]">
+              <h1 className={saasUi.pageTitle}>응답을 제출했어요</h1>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-[#565570]">
                 응답이 서버에 안전하게 수집되어 설문 분석 대시보드와 CSV에 즉시 반영되었어요.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => {
                   setDone(false);
                   setError('');
                 }}
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#e2deee] bg-white px-4 text-sm font-semibold text-[#22213a] hover:bg-[#f7f7fb]"
+                className={saasUi.btnSecondary}
               >
                 추가 응답 작성하기
               </button>
-              <Link
-                to={`/?view=analytics&surveyId=${id}`}
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-[#5b3df5] px-4 text-sm font-semibold text-white hover:bg-[#4b2ee0]"
-              >
-                <BarChart3 size={15} aria-hidden="true" /> 수집된 응답 · 분석 대시보드 보기
+              <Link to={`/?view=analytics&surveyId=${id}`} className={saasUi.btnPrimary}>
+                <BarChart3 size={16} aria-hidden="true" /> 수집된 응답 · 분석 대시보드 보기
               </Link>
             </div>
           </div>
         ) : (
           <div className="grid gap-5">
             <div>
-              <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5b3df5]">
-                <ListChecks size={14} aria-hidden="true" /> 고객 검증 · 연구 설문
+              <p className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#4c2ee6]">
+                <ListChecks size={16} aria-hidden="true" /> 고객 검증 · 연구 설문
               </p>
-              <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-[#22213a]">{survey.title}</h1>
+              <h1 className={`mt-2 ${saasUi.pageTitle}`}>{survey.title}</h1>
             </div>
 
             {!survey.active ? (
-              <p className="rounded-xl border border-[#e9e7f1] bg-[#f8f8fc] p-4 text-sm text-[#62627a]">
+              <p className="rounded-xl border border-[#e6e3f0] bg-[#f8f7fc] p-4.5 text-[15px] text-[#565570]">
                 이 설문은 응답 접수를 종료했어요.
               </p>
             ) : (
               <form className="grid gap-4" autoComplete="off" noValidate onSubmit={submit}>
-                <section className="grid gap-2.5 rounded-xl border border-[#e5dcfc] bg-[#f8f5ff] p-4">
-                  <h2 className="text-sm font-bold text-[#22213a]">참여 안내</h2>
-                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#22213a]">{survey.intro}</p>
-                  <p className="text-xs text-[#62627a]">이름이나 연락처 등 개인을 알아볼 수 있는 정보는 답변에 적지 마세요.</p>
-                  <label className="mt-1 flex items-center gap-2 text-[13px] font-semibold text-[#22213a]">
-                    <input type="checkbox" name="consent" required className="size-4 accent-[#5b3df5]" />
+                <section className="grid gap-2.5 rounded-xl border border-[#dfd7fb] bg-[#f8f6ff] p-4.5">
+                  <h2 className="text-[16px] font-bold text-[#17162b]">참여 안내</h2>
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[#17162b]">{survey.intro}</p>
+                  <p className="text-[14px] text-[#565570]">이름이나 연락처 등 개인을 알아볼 수 있는 정보는 답변에 적지 마세요.</p>
+                  <label className="mt-1 flex items-center gap-2 text-[15px] font-semibold text-[#17162b]">
+                    <input type="checkbox" name="consent" required className="size-4 accent-[#4c2ee6]" />
                     안내를 읽었으며 자발적으로 참여하는 데 동의합니다. *
                   </label>
                 </section>
 
                 {survey.questions.map((q, i) => (
-                  <fieldset key={i} className="grid gap-2 rounded-xl border border-[#e9e7f1] p-4">
-                    <legend className="px-1 text-sm font-bold text-[#22213a]">
-                      <span className="text-[#5b3df5]">{i + 1}.</span> {q.label} {q.required ? '*' : ''}
+                  <fieldset key={i} className="grid gap-2.5 rounded-xl border border-[#e6e3f0] p-4.5">
+                    <legend className="px-1 text-[16px] font-bold text-[#17162b]">
+                      <span className="text-[#4c2ee6]">{i + 1}.</span> {q.label} {q.required ? '*' : ''}
                     </legend>
                     {q.type === 'text' ? (
                       <textarea
@@ -1516,8 +1509,8 @@ function ResponseForm({ id }: { id: string }) {
                         className={`${inputClass} resize-y`}
                       />
                     ) : q.type === 'scale' ? (
-                      <div className="grid gap-1.5">
-                        <div className="flex justify-between text-xs text-[#62627a]">
+                      <div className="grid gap-2">
+                        <div className="flex justify-between text-[14px] text-[#565570]">
                           <span>1 전혀 그렇지 않다</span>
                           <span>5 매우 그렇다</span>
                         </div>
@@ -1556,7 +1549,7 @@ function ResponseForm({ id }: { id: string }) {
                 ))}
 
                 {error && (
-                  <p className="rounded-lg bg-[#fff0f3] px-3 py-2 text-[13px] text-[#9a2148]" role="alert">
+                  <p className="rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]" role="alert">
                     {error}
                   </p>
                 )}
@@ -1564,7 +1557,7 @@ function ResponseForm({ id }: { id: string }) {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="min-h-11 w-fit rounded-lg bg-[#5b3df5] px-6 text-sm font-semibold text-white hover:bg-[#4b2ee0] disabled:opacity-50"
+                  className={`${saasUi.btnPrimary} w-fit px-6`}
                 >
                   {busy ? '제출 중…' : '응답 제출'}
                 </button>
