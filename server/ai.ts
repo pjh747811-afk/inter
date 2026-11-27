@@ -125,6 +125,12 @@ function toUserFriendlyAiError(info: ParsedAiError): AiApiError {
       'GEMINI_API_KEY가 유효하지 않거나 권한이 없습니다. Settings > Secrets 패널을 확인해 주세요.',
     );
   }
+  if (info.status === 404 || info.statusText.includes('NOT_FOUND')) {
+    return new AiApiError(
+      502,
+      '요청한 AI 모델을 일시적으로 사용할 수 없어요(404). 잠시 후 다시 시도해 주세요.',
+    );
+  }
   if (info.status === 400) {
     return new AiApiError(400, 'AI 요청 형식을 처리할 수 없어요. 입력 내용을 조금 다듬어 다시 시도해 주세요.');
   }
@@ -184,7 +190,9 @@ async function callGeminiJson<T>(options: {
       }
       const info = inspectAiError(err);
       lastInfo = info;
-      if (!isRetryableStatus(info)) {
+      const canFallbackOnModelNotFound =
+        (info.status === 404 || info.statusText.includes('NOT_FOUND')) && i < attempts.length - 1;
+      if (!canFallbackOnModelNotFound && !isRetryableStatus(info)) {
         throw toUserFriendlyAiError(info);
       }
     }

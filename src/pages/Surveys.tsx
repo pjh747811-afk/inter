@@ -1148,6 +1148,24 @@ function SurveyBuilder({
             {aiNotice}
           </p>
         )}
+        {error && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f2ccd7] bg-[#fff5f7] px-4 py-2.5 text-[15px] text-[#9f1d45]"
+          >
+            <span>{error}</span>
+            {aiItem.trim().length >= 3 && (
+              <button
+                type="button"
+                disabled={aiBusy || busy}
+                onClick={() => void generateSurveyQuestions()}
+                className="inline-flex min-h-9 items-center rounded-lg border border-[#e6a4b7] bg-white px-3 text-[13px] font-bold text-[#9f1d45] hover:bg-[#fff8fa]"
+              >
+                다시 시도
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Quick 1-click template bar */}

@@ -636,6 +636,13 @@ app.get('/api/sync/:id/events', async (req, res) => {
 const PORT = 3000;
 
 async function startServer() {
+  // Ensure unmatched /api/* requests always return structured JSON 404 instead of falling through to Vite/HTML
+  app.use('/api', (req, res) => {
+    res.status(404).json({
+      error: `요청한 API 경로(${req.method} ${req.originalUrl})를 찾을 수 없어요.`,
+    });
+  });
+
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
